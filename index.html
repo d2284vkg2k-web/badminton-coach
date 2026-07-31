@@ -603,70 +603,102 @@ const GitHubSync = {
   getToken() { return localStorage.getItem(this.KEY_TOKEN) || ''; },
   getOwner() { return localStorage.getItem(this.KEY_OWNER) || ''; },
   getRepo()  { return localStorage.getItem(this.KEY_REPO) || ''; },
+  setStatus(html) { const el = document.getElementById('gh_status'); if (el) el.innerHTML = html; },
+  // 统一 fetch，捕获网络/CORS 错误
+  async api(path, opts = {}) {
+    const token = this.getToken();
+    if (!token) { this.setStatus('<span style="color:#dc2626">⚠️ 尚未配置 Token，请先保存配置</span>'); return null; }
+    opts.headers = Object.assign({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }, opts.headers || {});
+    if (opts.body) opts.headers['Content-Type'] = 'application/json';
+    try {
+      return await fetch('https://api.github.com' + path, opts);
+    } catch (e) {
+      this.setStatus('<span style="color:#dc2626">⚠️ 无法连接 GitHub：' + (e.message || '网络/CORS/代理拦截了 api.github.com') + '。请检查网络（如公司 WiFi 是否拦截）或换网络重试。</span>');
+      return null;
+    }
+  },
+  // 解析 GitHub 错误响应，给出可读原因
+  async parseErr(res) {
+    if (!res) return '请求未发出';
+    let msg = '';
+    try { const j = await res.json(); msg = j.message || ''; } catch (e) { try { msg = await res.text(); } catch (_) {} }
+    if (res.status === 401) return 'Token 无效或未授权（401）：' + msg;
+    if (res.status === 403) return '无权限或触发速率限制（403）：' + msg;
+    if (res.status === 404) return '仓库或文件不存在（404）：请检查拥有者/仓库名是否正确';
+    if (res.status === 422) return '请求被拒（422）：' + msg;
+    return 'HTTP ' + res.status + ' ' + msg;
+  },
   saveConfig() {
-    const token = document.getElementById('gh_token').value.trim();
-    const owner = document.getElementById('gh_owner').value.trim();
-    const repo = document.getElementById('gh_repo').value.trim();
+    // 清理可能误粘贴的全角空格/不可见字符，避免 fetch 报"无法连接"
+    const token = document.getElementById('gh_token').value.replace(/[\u3000\u00a0]/g, '').trim();
+    const owner = document.getElementById('gh_owner').value.replace(/[\u3000\u00a0]/g, '').trim();
+    const repo = document.getElementById('gh_repo').value.replace(/[\u3000\u00a0]/g, '').trim();
     if (!token || !owner || !repo) { showToast('请填写 Token / 拥有者 / 仓库名', true); return; }
     localStorage.setItem(this.KEY_TOKEN, token);
     localStorage.setItem(this.KEY_OWNER, owner);
     localStorage.setItem(this.KEY_REPO, repo);
     showToast('云端配置已保存');
-    this.status();
+    this.testConnection();
   },
-  api(path, opts = {}) {
-    const token = this.getToken();
-    if (!token) { showToast('请先保存云端配置', true); return null; }
-    opts.headers = Object.assign({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }, opts.headers || {});
-    if (opts.body) opts.headers['Content-Type'] = 'application/json';
-    return fetch('https://api.github.com' + path, opts);
+  // 诊断：验证 Token 有效 + 仓库可访问
+  async testConnection() {
+    const token = this.getToken(), owner = this.getOwner(), repo = this.getRepo();
+    if (!token || !owner || !repo) { this.setStatus('尚未配置云端同步'); return; }
+    this.setStatus('⏳ 正在测试连接 GitHub...');
+    const r = await this.api('/user');
+    if (!r) return;
+    if (!r.ok) { this.setStatus('<span style="color:#dc2626">❌ ' + await this.parseErr(r) + '</span>'); return; }
+    const me = await r.json();
+    const rr = await this.api('/repos/' + owner + '/' + repo);
+    if (!rr) return;
+    if (!rr.ok) { this.setStatus('<span style="color:#dc2626">❌ 仓库无法访问：' + await this.parseErr(rr) + '</span>'); return; }
+    const repoInfo = await rr.json();
+    this.setStatus('✅ 已连接 <b>' + me.login + '</b> · 仓库 <b>' + repoInfo.full_name + '</b>（' + (repoInfo.private ? '私有' : '公开') + '）');
   },
-  // 备份到云端：把当前数据写入仓库 data.json
+  // 备份到云端
   async upload() {
     const owner = this.getOwner(), repo = this.getRepo();
     if (!owner || !repo) { showToast('请先保存云端配置', true); return; }
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB.data, null, 2))));
     const path = '/repos/' + owner + '/' + repo + '/contents/data.json';
-    // 先看是否存在（需提供 sha 才能更新）
     let sha = null;
-    try {
-      const r = await this.api(path);
-      if (r && r.ok) { const d = await r.json(); sha = d.sha; }
-    } catch (e) {}
+    try { const r = await this.api(path); if (r && r.ok) { const d = await r.json(); sha = d.sha; } } catch (e) {}
     const body = { message: '数据同步 ' + new Date().toLocaleString('zh-CN'), content };
     if (sha) body.sha = sha;
-    const res = await this.api(path, { method: sha ? 'PUT' : 'PUT', body: JSON.stringify(body) });
-    if (res && res.ok) { showToast('已备份到云端 ☁️'); this.status(); }
-    else { const e = await res.text(); showToast('备份失败：' + (e.slice(0, 80) || res.status), true); }
+    const res = await this.api(path, { method: 'PUT', body: JSON.stringify(body) });
+    if (!res) return;
+    if (res.ok) { showToast('已备份到云端 ☁️'); this.status(); }
+    else { const err = await this.parseErr(res); showToast('备份失败', true); this.setStatus('<span style="color:#dc2626">❌ 备份失败：' + err + '</span>'); }
   },
   // 从云端恢复
   async download() {
     const owner = this.getOwner(), repo = this.getRepo();
     if (!owner || !repo) { showToast('请先保存云端配置', true); return; }
     const res = await this.api('/repos/' + owner + '/' + repo + '/contents/data.json');
-    if (!res || !res.ok) { showToast('云端暂无数据，请先备份', true); return; }
+    if (!res) return;
+    if (!res.ok) { const err = await this.parseErr(res); showToast('恢复失败', true); this.setStatus('<span style="color:#dc2626">❌ 恢复失败：' + err + '</span>'); return; }
     const d = await res.json();
     try {
       const text = decodeURIComponent(escape(atob(d.content.replace(/\s/g, ''))));
       const data = JSON.parse(text);
-      if (!data.students || !data.lessons) throw new Error('格式错误');
+      if (!data.students || !data.lessons) throw new Error('数据格式不正确');
       DB.data = data; DB.migrate(); DB.save();
       showToast('已从云端恢复 ✅');
+      this.setStatus('✅ 已从云端恢复（' + data.students.length + ' 学生 / ' + data.lessons.length + ' 课程）');
       Router.go('dashboard');
-    } catch (e) { showToast('恢复失败：' + e.message, true); }
+    } catch (e) { showToast('恢复失败', true); this.setStatus('<span style="color:#dc2626">❌ 解析失败：' + e.message + '</span>'); }
   },
   // 查看云端状态
   async status() {
-    const el = document.getElementById('gh_status');
-    if (!el) return;
     const owner = this.getOwner(), repo = this.getRepo();
-    if (!owner || !repo) { el.innerHTML = '尚未配置云端同步'; return; }
+    if (!owner || !repo) { this.setStatus('尚未配置云端同步'); return; }
     const res = await this.api('/repos/' + owner + '/' + repo + '/contents/data.json');
-    if (res && res.ok) {
+    if (!res) return;
+    if (res.ok) {
       const d = await res.json();
-      el.innerHTML = '☁️ 云端数据已存在 · 更新于 <b>' + new Date(d.commit.author.date).toLocaleString('zh-CN') + '</b> · 大小 ' + (d.size / 1024).toFixed(1) + 'KB';
+      this.setStatus('☁️ 云端数据已存在 · 更新于 <b>' + new Date(d.commit.author.date).toLocaleString('zh-CN') + '</b> · 大小 ' + (d.size / 1024).toFixed(1) + 'KB');
     } else {
-      el.innerHTML = '☁️ 云端暂无 data.json，点「备份到云端」上传第一份数据';
+      this.setStatus('☁️ 云端暂无 data.json，点「备份到云端」上传第一份数据');
     }
   }
 };
@@ -1187,7 +1219,7 @@ Pages.backup = function() {
         <button class="btn btn-primary" onclick="GitHubSync.saveConfig()">💾 保存配置</button>
         <button class="btn btn-green" onclick="GitHubSync.upload()">⬆ 备份到云端</button>
         <button class="btn btn-outline" onclick="GitHubSync.download()">⬇ 从云端恢复</button>
-        <button class="btn btn-outline" onclick="GitHubSync.status()">🔄 查看云端状态</button>
+        <button class="btn btn-outline" onclick="GitHubSync.testConnection()">🔌 测试连接</button>
       </div>
       <div id="gh_status" class="form-hint mt-8"></div>
     </div>
