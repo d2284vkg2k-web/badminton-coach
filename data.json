@@ -441,6 +441,32 @@
       "packages": [],
       "trainingPlans": [],
       "createdAt": 1785482475858
+    },
+    {
+      "name": "闵悦书",
+      "gender": "男",
+      "birthDate": "",
+      "joinDate": "2026-07-31",
+      "level": "初级",
+      "phone": "",
+      "notes": "",
+      "id": "ms8o5zqb68k4mh",
+      "packages": [],
+      "trainingPlans": [],
+      "createdAt": 1785485835299
+    },
+    {
+      "name": "闵思睿",
+      "gender": "男",
+      "birthDate": "",
+      "joinDate": "2026-07-31",
+      "level": "初级",
+      "phone": "",
+      "notes": "",
+      "id": "ms8o66zuy3mvje",
+      "packages": [],
+      "trainingPlans": [],
+      "createdAt": 1785485844714
     }
   ],
   "lessons": [
