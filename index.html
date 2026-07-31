@@ -347,6 +347,7 @@ canvas.chart { width: 100% !important; height: 240px; }
   .cal-cell-lesson { font-size: 10px; padding: 1px 3px; }
   .cal-weekcell { font-size: 11px; }
   #lessonSearch { width: 100%; }
+  #studentSearch { width: 100%; }
   .filter-bar { flex-wrap: wrap; }
 }
 @media (max-width: 480px) {
@@ -1128,7 +1129,38 @@ Pages.dayDetail = function(dateStr) {
 
 /* ----- 学生档案列表 ----- */
 Pages.students = function() {
-  const students = DB.getStudents();
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-title">学生档案</div>
+        <div class="page-subtitle">共 ${DB.getStudents().length} 名学生</div>
+      </div>
+      <button class="btn btn-primary" onclick="Forms.student()">+ 添加学生</button>
+    </div>
+    <div class="filter-bar" style="margin-bottom:14px">
+      <input type="text" class="form-input" id="studentSearch" placeholder="🔍 输入姓名 / 电话 / 级别检索学生…" oninput="Pages.studentsRender()" style="min-width:200px">
+    </div>
+    <div id="studentList"></div>
+  `;
+};
+Pages.studentsRender = function() {
+  const all = DB.getStudents();
+  const q = ((document.getElementById('studentSearch') && document.getElementById('studentSearch').value) || '').trim().toLowerCase();
+  const students = q ? all.filter(s =>
+    (s.name || '').toLowerCase().indexOf(q) !== -1 ||
+    (s.phone || '').toLowerCase().indexOf(q) !== -1 ||
+    (s.level || '').toLowerCase().indexOf(q) !== -1
+  ) : all;
+  const list = document.getElementById('studentList');
+  if (!list) return;
+  if (!all.length) {
+    list.innerHTML = '<div class="card empty"><div class="empty-icon">👥</div>暂无学生<br><button class="btn btn-primary mt-12" onclick="Forms.student()">+ 添加第一名学生</button></div>';
+    return;
+  }
+  if (!students.length) {
+    list.innerHTML = '<div class="card empty"><div class="empty-icon">🔍</div>未找到匹配「' + (q || '') + '」的学生</div>';
+    return;
+  }
   const cards = students.map(s => {
     const total = Utils.totalLessons(s);
     const used = s.packages.reduce((sum, p) => sum + p.usedLessons, 0);
@@ -1153,18 +1185,9 @@ Pages.students = function() {
         </div>`}
     </div>`;
   }).join('');
-
-  return `
-    <div class="page-header">
-      <div>
-        <div class="page-title">学生档案</div>
-        <div class="page-subtitle">共 ${students.length} 名学生</div>
-      </div>
-      <button class="btn btn-primary" onclick="Forms.student()">+ 添加学生</button>
-    </div>
-    ${students.length ? `<div class="student-grid">${cards}</div>` : '<div class="card empty"><div class="empty-icon">👥</div>暂无学生<br><button class="btn btn-primary mt-12" onclick="Forms.student()">+ 添加第一名学生</button></div>'}
-  `;
+  list.innerHTML = `<div class="student-grid">${cards}</div>`;
 };
+Pages.studentsInit = function() { Pages.studentsRender(); };
 
 /* ----- 学生详情 ----- */
 Pages.studentDetail = function(id) {
