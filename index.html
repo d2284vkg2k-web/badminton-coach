@@ -634,6 +634,23 @@ const Utils = {
     const now = new Date();
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   },
+  effectiveDuration(lessons) {
+    // 班课/一对二等群体课：同一时间多人同上课，教练时长只算一次（不重复计），
+    // 消课金额与课时仍按每人各算。一对一、自由定制按各自课时累加。
+    const groupTypes = { '1对2': 1, '小班': 1, '大班': 1, '班课': 1 };
+    const seen = {};
+    let total = 0;
+    (lessons || []).forEach(l => {
+      const dur = l.duration || 1;
+      if (groupTypes[l.type]) {
+        const key = l.date + '|' + l.startTime + '|' + l.endTime + '|' + l.type;
+        if (seen[key]) return;
+        seen[key] = true;
+      }
+      total += dur;
+    });
+    return total;
+  },
   getWeekDates(date) {
     const wr = Utils.weekRange(date);
     const dates = [];
@@ -880,8 +897,8 @@ Pages.dashboard = function() {
   const todayLessons = lessons.filter(l => l.date === today);
   const weekLessons = lessons.filter(l => Utils.isThisWeek(l.date));
   const monthLessons = lessons.filter(l => Utils.isThisMonth(l.date));
-  const weekDuration = weekLessons.reduce((s, l) => s + (l.duration || 1), 0);
-  const monthDuration = monthLessons.reduce((s, l) => s + (l.duration || 1), 0);
+  const weekDuration = Utils.effectiveDuration(weekLessons);
+  const monthDuration = Utils.effectiveDuration(monthLessons);
   const monthAmount = monthLessons.reduce((s, l) => s + (l.amount || 0), 0);
   const monthCourt = monthLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
   const monthNet = monthAmount - monthCourt;
@@ -920,7 +937,7 @@ Pages.dashboard = function() {
 
   // 今日上课时间（突出展示）
   const todaySorted = [...todayLessons].sort((a, b) => a.startTime.localeCompare(b.startTime));
-  const todayDuration = todayLessons.reduce((s, l) => s + (l.duration || 1), 0);
+  const todayDuration = Utils.effectiveDuration(todayLessons);
   const todayAmount = todayLessons.reduce((s, l) => s + (l.amount || 0), 0);
   const todayCourt = todayLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
   const todayNet = todayAmount - todayCourt;
@@ -1372,35 +1389,36 @@ Pages.statsRender = function() {
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now); d.setDate(now.getDate() - i);
       const key = Utils.formatDateFull(d);
-      buckets.push({ key, label: `${d.getMonth()+1}/${d.getDate()}`, duration: 0, amount: 0, count: 0, students: new Set() });
+      buckets.push({ key, label: `${d.getMonth()+1}/${d.getDate()}`, duration: 0, amount: 0, count: 0, students: new Set(), lessons: [] });
     }
     lessons.forEach(l => {
       const b = buckets.find(b => b.key === l.date);
-      if (b) { b.duration += l.duration || 1; b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
+      if (b) { b.lessons.push(l); b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
     });
   } else if (dim === 'week') {
     for (let i = 7; i >= 0; i--) {
       const d = new Date(now); d.setDate(now.getDate() - i * 7);
       const wr = Utils.weekRange(d);
-      buckets.push({ start: wr.start, end: wr.end, label: `${wr.start.getMonth()+1}/${wr.start.getDate()}-${wr.end.getMonth()+1}/${wr.end.getDate()}`, duration: 0, amount: 0, count: 0, students: new Set() });
+      buckets.push({ start: wr.start, end: wr.end, label: `${wr.start.getMonth()+1}/${wr.start.getDate()}-${wr.end.getMonth()+1}/${wr.end.getDate()}`, duration: 0, amount: 0, count: 0, students: new Set(), lessons: [] });
     }
     lessons.forEach(l => {
       const ld = new Date(l.date);
       const b = buckets.find(b => ld >= b.start && ld <= b.end);
-      if (b) { b.duration += l.duration || 1; b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
+      if (b) { b.lessons.push(l); b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
     });
   } else {
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      buckets.push({ year: d.getFullYear(), month: d.getMonth(), label: `${d.getFullYear()}/${d.getMonth()+1}`, duration: 0, amount: 0, count: 0, students: new Set() });
+      buckets.push({ year: d.getFullYear(), month: d.getMonth(), label: `${d.getFullYear()}/${d.getMonth()+1}`, duration: 0, amount: 0, count: 0, students: new Set(), lessons: [] });
     }
     lessons.forEach(l => {
       const ld = new Date(l.date);
       const b = buckets.find(b => b.year === ld.getFullYear() && b.month === ld.getMonth());
-      if (b) { b.duration += l.duration || 1; b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
+      if (b) { b.lessons.push(l); b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
     });
   }
 
+  buckets.forEach(b => { b.duration = Utils.effectiveDuration(b.lessons); });
   const totalDuration = buckets.reduce((s, b) => s + b.duration, 0);
   const totalAmount = buckets.reduce((s, b) => s + b.amount, 0);
   const totalCount = buckets.reduce((s, b) => s + b.count, 0);
