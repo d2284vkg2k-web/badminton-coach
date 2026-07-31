@@ -313,6 +313,8 @@ canvas.chart { width: 100% !important; height: 240px; }
 .cal-main { flex: 1; min-width: 0; }
 .cal-student { font-size: 14px; font-weight: 600; }
 .cal-sub { font-size: 12px; margin-top: 2px; }
+.cal-actions { display: flex; gap: 6px; align-items: center; }
+.day-empty { padding: 30px 12px; text-align: center; color: var(--gray-500); font-size: 14px; }
 
 @media (max-width: 768px) {
   .cal-lesson { flex-wrap: wrap; }
@@ -1070,7 +1072,7 @@ Pages.lessonsRender = function() {
     if (dayLs.length) cls.push('has-lesson');
     if (isOther) cls.push('other-month');
     const lessonsHtml = dayLs.slice(0, 3).map(l => '<div class="cal-cell-lesson" onclick="event.stopPropagation();Forms.lesson(\'' + l.id + '\')" title="' + l.studentName + ' ' + l.startTime + '-' + l.endTime + ' · ' + l.type + '">' + l.startTime + ' <span class="cal-cn">' + l.studentName + '</span></div>').join('') + (dayLs.length > 3 ? '<div class="cal-cell-more">+' + (dayLs.length - 3) + ' 节</div>' : '');
-    cells += '<div class="' + cls.join(' ') + '" onclick="Pages.lessonsPickDate(\'' + dateStr + '\')"><div class="cal-cell-num">' + d + '</div>' + lessonsHtml + '</div>';
+    cells += '<div class="' + cls.join(' ') + '" data-date="' + dateStr + '" onclick="Pages.lessonsPickDate(\'' + dateStr + '\')"><div class="cal-cell-num">' + d + '</div>' + lessonsHtml + '</div>';
   }
 
   const html = `
@@ -1091,7 +1093,38 @@ Pages.lessonsRender = function() {
 Pages.lessonsPrevMonth = function() { const ym = Pages._calYM; let m = ym.m - 1, y = ym.y; if (m < 0) { m = 11; y--; } Pages._calYM = { y, m }; Pages.lessonsRender(); };
 Pages.lessonsNextMonth = function() { const ym = Pages._calYM; let m = ym.m + 1, y = ym.y; if (m > 11) { m = 0; y++; } Pages._calYM = { y, m }; Pages.lessonsRender(); };
 Pages.lessonsGoToday = function() { const t = new Date(); Pages._calYM = { y: t.getFullYear(), m: t.getMonth() }; Pages.lessonsRender(); };
-Pages.lessonsPickDate = function(dateStr) { Forms.lesson(null, null, dateStr); };
+Pages.lessonsPickDate = function(dateStr) { Pages.dayDetail(dateStr); };
+Pages.dayDetail = function(dateStr) {
+  const lessons = DB.getLessons().filter(l => l.date === dateStr).slice().sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const d = new Date(dateStr + 'T00:00:00');
+  const wk = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
+  const isToday = dateStr === Utils.todayStr();
+  const title = dateStr + ' ' + wk + (isToday ? ' · 今天' : '') + (lessons.length ? ' · 共 ' + lessons.length + ' 节' : '');
+  let body;
+  if (!lessons.length) {
+    body = '<div class="day-empty">当日暂无排课，点击下方按钮添加</div>';
+  } else {
+    body = lessons.map(l => {
+      let consume = '不扣';
+      if (l.packageId) { const s = DB.getStudent(l.studentId); const p = s && s.packages.find(pp => pp.id === l.packageId); if (p) consume = DB.calcConsume(l.duration, p.lessonDuration); }
+      const typeBadge = l.type === '1对2' ? 'badge-orange' : l.type === '小班' ? 'badge-blue' : (l.type === '大班' || l.type === '自由定制') ? 'badge-gray' : 'badge-green';
+      return `<div class="cal-lesson" style="cursor:default">
+        <div class="cal-time">${l.startTime}<span class="cal-time-end">-${l.endTime}</span></div>
+        <div class="cal-main">
+          <div class="cal-student"><span class="badge ${typeBadge}">${l.type}</span> ${l.studentName}${l.location ? ' <span class="muted">· ' + l.location + '</span>' : ''}</div>
+          <div class="cal-sub muted">${l.duration}h · 消耗 ${consume} 课时 · ¥${l.amount}${l.courtCost != null ? ' · 场地¥' + l.courtCost : ''}</div>
+          ${l.notes ? '<div class="cal-sub muted">📝 ' + l.notes + '</div>' : ''}
+        </div>
+        <div class="cal-actions">
+          <button class="btn btn-outline btn-sm" onclick="Forms.lesson(\'${l.id}\')">编辑</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  const footer = `<button class="btn btn-primary" onclick="Forms.lesson(null, null, '${dateStr}')">+ 添加该日课程</button>
+                  <button class="btn btn-outline" onclick="closeModal()">关闭</button>`;
+  openModal('📅 ' + title, body, footer);
+};
 
 /* ----- 学生档案列表 ----- */
 Pages.students = function() {
