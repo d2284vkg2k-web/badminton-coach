@@ -285,6 +285,11 @@ canvas.chart { width: 100% !important; height: 240px; }
 .today-info { flex: 1; min-width: 0; }
 .today-student { font-size: 15px; font-weight: 600; }
 .today-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.today-summary { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.today-stat { flex: 1; min-width: 92px; background: var(--white); border-radius: 8px; padding: 10px 12px; text-align: center; box-shadow: var(--shadow); }
+.today-stat-label { font-size: 12px; color: var(--gray-500); margin-bottom: 4px; }
+.today-stat-value { font-size: 20px; font-weight: 700; color: var(--gray-900); }
+.today-stat-value span { font-size: 13px; font-weight: 400; color: var(--gray-500); margin-left: 2px; }
 
 /* ===== Calendar lessons view ===== */
 .cal-view { display: flex; flex-direction: column; }
@@ -309,6 +314,29 @@ canvas.chart { width: 100% !important; height: 240px; }
   .cal-actions { width: 100%; justify-content: flex-end; }
   .cal-time { min-width: 100px; }
   .today-time { min-width: 100px; font-size: 15px; }
+}
+
+/* ===== Month calendar (lessons page) ===== */
+.cal-month-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.cal-nav { display: flex; align-items: center; gap: 12px; }
+.cal-month-title { font-size: 17px; font-weight: 700; color: var(--gray-900); }
+.cal-weekrow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
+.cal-weekcell { text-align: center; font-size: 12px; color: var(--gray-500); font-weight: 600; padding: 4px 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-cell { min-height: 86px; background: var(--white); border: 1px solid var(--gray-100); border-radius: 8px; padding: 5px 6px; font-size: 12px; cursor: pointer; transition: border-color 0.15s; }
+.cal-cell:hover { border-color: var(--green); }
+.cal-cell.today { border-color: var(--orange); background: #fffbeb; }
+.cal-cell.has-lesson { border-top: 3px solid var(--green); }
+.cal-cell.other-month { opacity: 0.38; background: var(--gray-50); cursor: default; }
+.cal-cell-num { font-weight: 700; font-size: 13px; color: var(--gray-900); margin-bottom: 3px; }
+.cal-cell.today .cal-cell-num { color: var(--orange); }
+.cal-cell-lesson { background: var(--green-light); color: var(--green-dark); border-radius: 4px; padding: 1px 5px; margin-bottom: 2px; font-size: 11px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-cell-lesson:hover { background: #d7efde; }
+.cal-cell-more { font-size: 11px; color: var(--gray-500); padding-left: 5px; }
+@media (max-width: 768px) {
+  .cal-cell { min-height: 58px; padding: 3px 4px; }
+  .cal-cell-lesson { font-size: 10px; padding: 1px 3px; }
+  .cal-weekcell { font-size: 11px; }
 }
 </style>
 </head>
@@ -871,6 +899,10 @@ Pages.dashboard = function() {
 
   // 今日上课时间（突出展示）
   const todaySorted = [...todayLessons].sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const todayDuration = todayLessons.reduce((s, l) => s + (l.duration || 1), 0);
+  const todayAmount = todayLessons.reduce((s, l) => s + (l.amount || 0), 0);
+  const todayCourt = todayLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
+  const todayNet = todayAmount - todayCourt;
   const todayCardHtml = `<div class="today-card">
     <div class="today-card-head">
       <div class="today-card-title">⏰ 今日上课时间 <span class="badge badge-orange">${todaySorted.length} 节</span></div>
@@ -878,6 +910,11 @@ Pages.dashboard = function() {
         <span class="muted" style="font-size:12px">${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}</span>
         <button class="btn btn-outline btn-sm" onclick="Router.go('lessons','today')">查看全部</button>
       </div>
+    </div>
+    <div class="today-summary">
+      <div class="today-stat"><div class="today-stat-label">今日上课时长</div><div class="today-stat-value">${todayDuration}<span>h</span></div></div>
+      <div class="today-stat"><div class="today-stat-label">今日消课金额</div><div class="today-stat-value">¥${todayAmount}</div></div>
+      <div class="today-stat"><div class="today-stat-label">今日净收入</div><div class="today-stat-value" style="color:${todayNet>=0?'var(--green)':'var(--red)'}">¥${todayNet}</div></div>
     </div>
     ${todaySorted.length ? `<div class="today-list">${todaySorted.map(l => `
       <div class="today-lesson" onclick="Router.go('students','${l.studentId}')" style="cursor:pointer">
@@ -968,30 +1005,17 @@ Pages.dashboard = function() {
 
 /* ----- 上课记录 ----- */
 Pages.lessons = function() {
-  const initFilter = (Router.currentParam === 'today' || Router.currentParam === 'week' || Router.currentParam === 'month') ? Router.currentParam : 'all';
   return `
     <div class="page-header">
       <div>
         <div class="page-title">上课记录</div>
-        <div class="page-subtitle">管理所有上课记录与消课明细</div>
+        <div class="page-subtitle">日历视图 · 按月份排布每节课</div>
       </div>
       <button class="btn btn-primary" onclick="Forms.lesson()">+ 记录上课</button>
     </div>
     <div class="card">
       <div class="filter-bar">
-        <select class="form-select" id="lessonFilter" onchange="Pages.lessonsRender()">
-          <option value="all" ${initFilter==='all'?'selected':''}>全部记录</option>
-          <option value="today" ${initFilter==='today'?'selected':''}>今天</option>
-          <option value="week" ${initFilter==='week'?'selected':''}>本周</option>
-          <option value="month" ${initFilter==='month'?'selected':''}>本月</option>
-        </select>
-        <input type="text" class="form-input" id="lessonSearch" placeholder="搜索学生姓名..." oninput="Pages.lessonsRender()" style="min-width:180px">
-        <div class="flex gap-8" style="margin-left:auto">
-          <select class="form-select" id="lessonSort" onchange="Pages.lessonsRender()">
-            <option value="desc">最新优先</option>
-            <option value="asc">最早优先</option>
-          </select>
-        </div>
+        <input type="text" class="form-input" id="lessonSearch" placeholder="按学生姓名筛选…" oninput="Pages.lessonsRender()" style="min-width:200px">
       </div>
       <div id="lessonTable"></div>
     </div>
@@ -999,70 +1023,57 @@ Pages.lessons = function() {
 };
 Pages.lessonsInit = function() { Pages.lessonsRender(); };
 Pages.lessonsRender = function() {
-  const filter = document.getElementById('lessonFilter').value;
-  const search = (document.getElementById('lessonSearch').value || '').trim();
-  const sort = document.getElementById('lessonSort').value;
+  if (!Pages._calYM) { const t = new Date(); Pages._calYM = { y: t.getFullYear(), m: t.getMonth() }; }
+  const ym = Pages._calYM;
+  const search = ((document.getElementById('lessonSearch') && document.getElementById('lessonSearch').value) || '').trim();
   let lessons = DB.getLessons();
-  if (filter === 'today') lessons = lessons.filter(l => l.date === Utils.todayStr());
-  else if (filter === 'week') lessons = lessons.filter(l => Utils.isThisWeek(l.date));
-  else if (filter === 'month') lessons = lessons.filter(l => Utils.isThisMonth(l.date));
-  if (search) lessons = lessons.filter(l => l.studentName.includes(search));
-  lessons.sort((a, b) => {
-    const cmp = (b.date + b.startTime).localeCompare(a.date + a.startTime);
-    return sort === 'asc' ? -cmp : cmp;
-  });
+  if (search) lessons = lessons.filter(l => l.studentName.indexOf(search) !== -1);
+  const byDate = {};
+  lessons.forEach(l => { (byDate[l.date] = byDate[l.date] || []).push(l); });
 
-  const totalDuration = lessons.reduce((s, l) => s + (l.duration || 1), 0);
-  const totalAmount = lessons.reduce((s, l) => s + (l.amount || 0), 0);
+  const first = new Date(ym.y, ym.m, 1);
+  const startIdx = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(ym.y, ym.m + 1, 0).getDate();
+  let total = startIdx + daysInMonth;
+  total = Math.ceil(total / 7) * 7;
+  const weekNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 
-  // 按日期分组，日历式排版：哪天 / 周几 / 时间 / 谁上课
-  const groups = {};
-  lessons.forEach(l => { (groups[l.date] = groups[l.date] || []).push(l); });
-  const dates = Object.keys(groups).sort((a, b) => sort === 'asc' ? a.localeCompare(b) : b.localeCompare(a));
+  let cells = '';
+  for (let i = 0; i < total; i++) {
+    const dayNum = i - startIdx + 1;
+    const date = new Date(ym.y, ym.m, dayNum);
+    const y = date.getFullYear(), mo = date.getMonth(), d = date.getDate();
+    const dateStr = y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const isOther = mo !== ym.m;
+    const isToday = dateStr === Utils.todayStr();
+    const dayLs = (byDate[dateStr] || []).slice().sort((a, b) => a.startTime.localeCompare(b.startTime));
+    const cls = ['cal-cell'];
+    if (isToday) cls.push('today');
+    if (dayLs.length) cls.push('has-lesson');
+    if (isOther) cls.push('other-month');
+    const lessonsHtml = dayLs.slice(0, 3).map(l => '<div class="cal-cell-lesson" onclick="event.stopPropagation();Forms.lesson(\'' + l.id + '\')" title="' + l.studentName + ' ' + l.startTime + '-' + l.endTime + ' · ' + l.type + '">' + l.startTime + ' ' + l.studentName + '</div>').join('') + (dayLs.length > 3 ? '<div class="cal-cell-more">+' + (dayLs.length - 3) + ' 节</div>' : '');
+    cells += '<div class="' + cls.join(' ') + '" onclick="Pages.lessonsPickDate(\'' + dateStr + '\')"><div class="cal-cell-num">' + d + '</div>' + lessonsHtml + '</div>';
+  }
 
-  const html = lessons.length ? `
-    <div class="flex-between mb-8" style="padding:8px 0;border-bottom:1px solid var(--gray-100)">
-      <span class="muted">共 ${lessons.length} 条记录</span>
-      <span class="muted">总时长 <b class="text-green">${totalDuration}h</b> · 总金额 <b class="text-green">¥${totalAmount}</b></span>
+  const html = `
+    <div class="cal-month-head">
+      <div class="cal-nav">
+        <button class="btn btn-outline btn-sm" onclick="Pages.lessonsPrevMonth()">‹ 上月</button>
+        <div class="cal-month-title">${ym.y} 年 ${ym.m + 1} 月</div>
+        <button class="btn btn-outline btn-sm" onclick="Pages.lessonsNextMonth()">下月 ›</button>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="Pages.lessonsGoToday()">回到本月</button>
     </div>
-    <div class="cal-view">${dates.map(dateStr => {
-      const dayLessons = groups[dateStr].slice().sort((a, b) => a.startTime.localeCompare(b.startTime));
-      const d = new Date(dateStr.replace(/-/g, '/'));
-      const wd = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
-      const isToday = dateStr === Utils.todayStr();
-      const dayDur = dayLessons.reduce((s, l) => s + (l.duration || 1), 0);
-      const dayAmt = dayLessons.reduce((s, l) => s + (l.amount || 0), 0);
-      return `<div class="cal-day ${isToday ? 'cal-today' : ''}">
-        <div class="cal-day-head">
-          <div class="cal-date">${Utils.formatDateFull(dateStr)} <span class="cal-weekday">${wd}</span>${isToday ? ' <span class="badge badge-orange">今天</span>' : ''}</div>
-          <div class="cal-day-meta">${dayLessons.length} 节 · ${dayDur}h · ¥${dayAmt}</div>
-        </div>
-        <div class="cal-lessons">${dayLessons.map(l => {
-          let consume = '不扣';
-          if (l.packageId) {
-            const s = DB.getStudent(l.studentId);
-            const p = s && s.packages.find(pp => pp.id === l.packageId);
-            if (p) consume = DB.calcConsume(l.duration, p.lessonDuration);
-          }
-          const typeBadge = l.type === '1对2' ? 'badge-orange' : l.type === '小班' ? 'badge-blue' : (l.type === '大班' || l.type === '自由定制') ? 'badge-gray' : 'badge-green';
-          return `<div class="cal-lesson" onclick="Router.go('students','${l.studentId}')">
-            <div class="cal-time">${l.startTime}<span class="cal-time-end">-${l.endTime}</span></div>
-            <div class="cal-main">
-              <div class="cal-student">${l.studentName} <span class="badge ${typeBadge}">${l.type}</span>${l.location ? ' <span class="muted">· ' + l.location + '</span>' : ''}</div>
-              <div class="cal-sub muted">${l.duration}h · 消耗 ${consume} 课时 · ¥${l.amount}${l.courtCost != null ? ' · 场地¥' + l.courtCost : ''}</div>
-            </div>
-            <div class="cal-actions">
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();Forms.lesson('${l.id}')">编辑</button>
-              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();Actions.deleteLesson('${l.id}')">删除</button>
-            </div>
-          </div>`;
-        }).join('')}</div>
-      </div>`;
-    }).join('')}</div>
-  ` : '<div class="empty"><div class="empty-icon">📝</div>暂无上课记录<br><button class="btn btn-primary mt-12" onclick="Forms.lesson()">+ 记录第一节课</button></div>';
-
-  document.getElementById('lessonTable').innerHTML = html;
+    <div class="cal-weekrow">${weekNames.map(w => '<div class="cal-weekcell">' + w + '</div>').join('')}</div>
+    <div class="cal-grid">${cells}</div>
+  `;
+  const el = document.getElementById('lessonTable');
+  if (el) el.innerHTML = html;
 };
+Pages.lessonsPrevMonth = function() { const ym = Pages._calYM; let m = ym.m - 1, y = ym.y; if (m < 0) { m = 11; y--; } Pages._calYM = { y, m }; Pages.lessonsRender(); };
+Pages.lessonsNextMonth = function() { const ym = Pages._calYM; let m = ym.m + 1, y = ym.y; if (m > 11) { m = 0; y++; } Pages._calYM = { y, m }; Pages.lessonsRender(); };
+Pages.lessonsGoToday = function() { const t = new Date(); Pages._calYM = { y: t.getFullYear(), m: t.getMonth() }; Pages.lessonsRender(); };
+Pages.lessonsPickDate = function(dateStr) { Forms.lesson(null, null, dateStr); };
 
 /* ----- 学生档案列表 ----- */
 Pages.students = function() {
@@ -1692,7 +1703,7 @@ Forms.planSave = function(studentId) {
 };
 
 // 上课记录表单
-Forms.lesson = function(lessonId, presetStudentId) {
+Forms.lesson = function(lessonId, presetStudentId, presetDate) {
   const l = lessonId ? DB.getLessons().find(x => x.id === lessonId) : null;
   const students = DB.getStudents();
   if (!students.length) { showToast('请先添加学生'); return; }
@@ -1705,7 +1716,7 @@ Forms.lesson = function(lessonId, presetStudentId) {
         <input type="hidden" id="l_student" value="">
         <div class="combobox-list" id="l_student_list" style="display:none"></div>
       </div>
-      <div class="form-group"><label class="form-label">上课日期 <span class="req">*</span></label><input type="date" class="form-input" id="l_date" value="${l ? l.date : Utils.todayStr()}"></div>
+      <div class="form-group"><label class="form-label">上课日期 <span class="req">*</span></label><input type="date" class="form-input" id="l_date" value="${l ? l.date : (presetDate || Utils.todayStr())}"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">开始时间</label><input type="time" class="form-input" id="l_start" value="${l ? l.startTime : '09:00'}" onchange="Forms.lessonCalcDuration()"></div>
