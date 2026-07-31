@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>羽毛球教练工作台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232d8a4e'/%3E%3Ctext x='50' y='72' font-size='58' text-anchor='middle'%3E%F0%9F%8F%B8%3C/text%3E%3C/svg%3E">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
@@ -257,6 +258,58 @@ canvas.chart { width: 100% !important; height: 240px; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .gap-8 { gap: 8px; }
 .flex { display: flex; }
+
+/* ===== Searchable combobox ===== */
+.combobox { position: relative; }
+.combobox-list {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 60;
+  background: var(--white); border: 1px solid var(--gray-300); border-radius: 8px;
+  box-shadow: var(--shadow-md); max-height: 240px; overflow-y: auto; margin-top: 4px;
+}
+.combobox-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 12px; cursor: pointer; font-size: 14px;
+}
+.combobox-item:hover, .combobox-item.active { background: var(--green-light); }
+.combobox-name { font-weight: 600; }
+.combobox-meta { font-size: 12px; color: var(--gray-500); }
+
+/* ===== Today's lessons (prominent) ===== */
+.today-card { background: linear-gradient(135deg,#fff7ed,#ffedd5); border: 1px solid var(--orange-light); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 16px; }
+.today-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.today-card-title { font-size: 16px; font-weight: 700; color: var(--orange); display: flex; align-items: center; gap: 8px; }
+.today-list { display: flex; flex-direction: column; gap: 10px; }
+.today-lesson { display: flex; align-items: center; gap: 14px; background: var(--white); border-radius: 8px; padding: 10px 14px; box-shadow: var(--shadow); }
+.today-time { font-size: 16px; font-weight: 700; color: var(--gray-900); min-width: 120px; font-variant-numeric: tabular-nums; }
+.today-time-end { font-weight: 400; color: var(--gray-500); font-size: 12px; }
+.today-info { flex: 1; min-width: 0; }
+.today-student { font-size: 15px; font-weight: 600; }
+.today-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+/* ===== Calendar lessons view ===== */
+.cal-view { display: flex; flex-direction: column; }
+.cal-day { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden; }
+.cal-day.cal-today { border: 1px solid var(--orange-light); }
+.cal-day-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
+.cal-today .cal-day-head { background: #fffbeb; }
+.cal-date { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+.cal-weekday { font-size: 12px; font-weight: 600; color: var(--gray-500); margin-left: 6px; }
+.cal-day-meta { font-size: 12px; color: var(--gray-500); }
+.cal-lessons { padding: 6px 16px 12px; }
+.cal-lesson { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); cursor: pointer; }
+.cal-lesson:last-child { border-bottom: none; }
+.cal-time { font-size: 14px; font-weight: 700; color: var(--green-dark); min-width: 120px; font-variant-numeric: tabular-nums; }
+.cal-time-end { font-weight: 400; color: var(--gray-500); font-size: 12px; }
+.cal-main { flex: 1; min-width: 0; }
+.cal-student { font-size: 14px; font-weight: 600; }
+.cal-sub { font-size: 12px; margin-top: 2px; }
+
+@media (max-width: 768px) {
+  .cal-lesson { flex-wrap: wrap; }
+  .cal-actions { width: 100%; justify-content: flex-end; }
+  .cal-time { min-width: 100px; }
+  .today-time { min-width: 100px; font-size: 15px; }
+}
 </style>
 </head>
 <body>
@@ -816,6 +869,26 @@ Pages.dashboard = function() {
       <td class="text-bold">¥${l.amount}</td>
     </tr>`).join('')}</tbody></table></div>` : '<div class="empty"><div class="empty-icon">📝</div>暂无上课记录</div>';
 
+  // 今日上课时间（突出展示）
+  const todaySorted = [...todayLessons].sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const todayCardHtml = `<div class="today-card">
+    <div class="today-card-head">
+      <div class="today-card-title">⏰ 今日上课时间 <span class="badge badge-orange">${todaySorted.length} 节</span></div>
+      <div class="flex gap-8" style="align-items:center">
+        <span class="muted" style="font-size:12px">${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}</span>
+        <button class="btn btn-outline btn-sm" onclick="Router.go('lessons','today')">查看全部</button>
+      </div>
+    </div>
+    ${todaySorted.length ? `<div class="today-list">${todaySorted.map(l => `
+      <div class="today-lesson" onclick="Router.go('students','${l.studentId}')" style="cursor:pointer">
+        <div class="today-time">${l.startTime}<span class="today-time-end"> - ${l.endTime}</span></div>
+        <div class="today-info">
+          <div class="today-student">${l.studentName} <span class="badge ${l.type === '1对2' ? 'badge-orange' : l.type === '小班' ? 'badge-blue' : 'badge-green'}">${l.type}</span></div>
+          <div class="today-meta">${l.location ? l.location + ' · ' : ''}¥${l.amount}${l.courtCost != null ? ' · 场地¥' + l.courtCost : ''}</div>
+        </div>
+      </div>`).join('')}</div>` : '<div class="empty" style="padding:16px 0"><div class="empty-icon" style="font-size:34px">🌞</div>今日暂无课程安排，好好休息一下～</div>'}
+  </div>`;
+
   return `
     <div class="page-header">
       <div>
@@ -824,6 +897,8 @@ Pages.dashboard = function() {
       </div>
       <button class="btn btn-primary" onclick="Forms.lesson()">+ 记录上课</button>
     </div>
+
+    ${todayCardHtml}
 
     <div class="stat-grid">
       <div class="stat-card orange">
@@ -893,6 +968,7 @@ Pages.dashboard = function() {
 
 /* ----- 上课记录 ----- */
 Pages.lessons = function() {
+  const initFilter = (Router.currentParam === 'today' || Router.currentParam === 'week' || Router.currentParam === 'month') ? Router.currentParam : 'all';
   return `
     <div class="page-header">
       <div>
@@ -904,10 +980,10 @@ Pages.lessons = function() {
     <div class="card">
       <div class="filter-bar">
         <select class="form-select" id="lessonFilter" onchange="Pages.lessonsRender()">
-          <option value="all">全部记录</option>
-          <option value="today">今天</option>
-          <option value="week">本周</option>
-          <option value="month">本月</option>
+          <option value="all" ${initFilter==='all'?'selected':''}>全部记录</option>
+          <option value="today" ${initFilter==='today'?'selected':''}>今天</option>
+          <option value="week" ${initFilter==='week'?'selected':''}>本周</option>
+          <option value="month" ${initFilter==='month'?'selected':''}>本月</option>
         </select>
         <input type="text" class="form-input" id="lessonSearch" placeholder="搜索学生姓名..." oninput="Pages.lessonsRender()" style="min-width:180px">
         <div class="flex gap-8" style="margin-left:auto">
@@ -939,35 +1015,50 @@ Pages.lessonsRender = function() {
   const totalDuration = lessons.reduce((s, l) => s + (l.duration || 1), 0);
   const totalAmount = lessons.reduce((s, l) => s + (l.amount || 0), 0);
 
+  // 按日期分组，日历式排版：哪天 / 周几 / 时间 / 谁上课
+  const groups = {};
+  lessons.forEach(l => { (groups[l.date] = groups[l.date] || []).push(l); });
+  const dates = Object.keys(groups).sort((a, b) => sort === 'asc' ? a.localeCompare(b) : b.localeCompare(a));
+
   const html = lessons.length ? `
     <div class="flex-between mb-8" style="padding:8px 0;border-bottom:1px solid var(--gray-100)">
       <span class="muted">共 ${lessons.length} 条记录</span>
       <span class="muted">总时长 <b class="text-green">${totalDuration}h</b> · 总金额 <b class="text-green">¥${totalAmount}</b></span>
     </div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>日期</th><th>时间</th><th>学生</th><th>类型</th><th>时长</th><th>消耗课时</th><th>金额</th><th>场地费</th><th>备注</th><th>操作</th></tr></thead>
-      <tbody>
-        ${lessons.map(l => {
-          const s = DB.getStudent(l.studentId);
-          const pkg = s && s.packages.find(p => p.id === l.packageId);
-          const consume = pkg ? DB.calcConsume(l.duration, pkg.lessonDuration) : l.duration;
-          return `<tr>
-          <td>${Utils.formatDateFull(l.date)}</td>
-          <td>${l.startTime}-${l.endTime}</td>
-          <td><a onclick="Router.go('students','${l.studentId}')" style="cursor:pointer;color:var(--green);font-weight:600">${l.studentName}</a></td>
-          <td><span class="badge ${l.type==='1对2'?'badge-orange':l.type==='小班'?'badge-blue':'badge-green'}">${l.type}</span></td>
-          <td>${l.duration}h</td>
-          <td>${consume}</td>
-          <td class="text-bold">¥${l.amount}</td>
-          <td class="muted">${l.courtCost != null ? '¥'+l.courtCost : '-'}${l.location ? ' · '+l.location : ''}</td>
-          <td class="muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.notes || '-'}</td>
-          <td>
-            <button class="btn btn-outline btn-sm" onclick="Forms.lesson('${l.id}')">编辑</button>
-            <button class="btn btn-danger btn-sm" onclick="Actions.deleteLesson('${l.id}')">删除</button>
-          </td>
-        </tr>`; }).join('')}
-      </tbody>
-    </table></div>
+    <div class="cal-view">${dates.map(dateStr => {
+      const dayLessons = groups[dateStr].slice().sort((a, b) => a.startTime.localeCompare(b.startTime));
+      const d = new Date(dateStr.replace(/-/g, '/'));
+      const wd = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
+      const isToday = dateStr === Utils.todayStr();
+      const dayDur = dayLessons.reduce((s, l) => s + (l.duration || 1), 0);
+      const dayAmt = dayLessons.reduce((s, l) => s + (l.amount || 0), 0);
+      return `<div class="cal-day ${isToday ? 'cal-today' : ''}">
+        <div class="cal-day-head">
+          <div class="cal-date">${Utils.formatDateFull(dateStr)} <span class="cal-weekday">${wd}</span>${isToday ? ' <span class="badge badge-orange">今天</span>' : ''}</div>
+          <div class="cal-day-meta">${dayLessons.length} 节 · ${dayDur}h · ¥${dayAmt}</div>
+        </div>
+        <div class="cal-lessons">${dayLessons.map(l => {
+          let consume = '不扣';
+          if (l.packageId) {
+            const s = DB.getStudent(l.studentId);
+            const p = s && s.packages.find(pp => pp.id === l.packageId);
+            if (p) consume = DB.calcConsume(l.duration, p.lessonDuration);
+          }
+          const typeBadge = l.type === '1对2' ? 'badge-orange' : l.type === '小班' ? 'badge-blue' : (l.type === '大班' || l.type === '自由定制') ? 'badge-gray' : 'badge-green';
+          return `<div class="cal-lesson" onclick="Router.go('students','${l.studentId}')">
+            <div class="cal-time">${l.startTime}<span class="cal-time-end">-${l.endTime}</span></div>
+            <div class="cal-main">
+              <div class="cal-student">${l.studentName} <span class="badge ${typeBadge}">${l.type}</span>${l.location ? ' <span class="muted">· ' + l.location + '</span>' : ''}</div>
+              <div class="cal-sub muted">${l.duration}h · 消耗 ${consume} 课时 · ¥${l.amount}${l.courtCost != null ? ' · 场地¥' + l.courtCost : ''}</div>
+            </div>
+            <div class="cal-actions">
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();Forms.lesson('${l.id}')">编辑</button>
+              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();Actions.deleteLesson('${l.id}')">删除</button>
+            </div>
+          </div>`;
+        }).join('')}</div>
+      </div>`;
+    }).join('')}</div>
   ` : '<div class="empty"><div class="empty-icon">📝</div>暂无上课记录<br><button class="btn btn-primary mt-12" onclick="Forms.lesson()">+ 记录第一节课</button></div>';
 
   document.getElementById('lessonTable').innerHTML = html;
@@ -1053,16 +1144,39 @@ Pages.studentDetail = function(id) {
     </div>
   `).join('') : '<div class="empty" style="padding:20px"><div class="empty-icon">📋</div>暂无训练计划</div>';
 
-  const lessonHtml = lessons.length ? `<div class="table-wrap"><table>
-    <thead><tr><th>日期</th><th>时间</th><th>类型</th><th>时长</th><th>金额</th><th>备注</th></tr></thead>
-    <tbody>${lessons.map(l => `<tr>
-      <td>${Utils.formatDateFull(l.date)}</td>
-      <td>${l.startTime}-${l.endTime}</td>
-      <td><span class="badge badge-blue">${l.type}</span></td>
-      <td>${l.duration}h</td>
-      <td class="text-bold">¥${l.amount}</td>
-      <td class="muted">${l.notes || '-'}</td>
-    </tr>`).join('')}</tbody></table></div>` : '<div class="empty" style="padding:20px">暂无上课记录</div>';
+  const stuGroups = {};
+  lessons.forEach(l => { (stuGroups[l.date] = stuGroups[l.date] || []).push(l); });
+  const stuDates = Object.keys(stuGroups).sort((a, b) => b.localeCompare(a));
+  const lessonHtml = lessons.length ? `<div class="cal-view">${stuDates.map(dateStr => {
+    const dayLessons = stuGroups[dateStr].slice().sort((a, b) => a.startTime.localeCompare(b.startTime));
+    const d = new Date(dateStr.replace(/-/g, '/'));
+    const wd = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
+    const isToday = dateStr === Utils.todayStr();
+    const dayDur = dayLessons.reduce((sum, l) => sum + (l.duration || 1), 0);
+    const dayAmt = dayLessons.reduce((sum, l) => sum + (l.amount || 0), 0);
+    return `<div class="cal-day ${isToday ? 'cal-today' : ''}">
+      <div class="cal-day-head">
+        <div class="cal-date">${Utils.formatDateFull(dateStr)} <span class="cal-weekday">${wd}</span>${isToday ? ' <span class="badge badge-orange">今天</span>' : ''}</div>
+        <div class="cal-day-meta">${dayLessons.length} 节 · ${dayDur}h · ¥${dayAmt}</div>
+      </div>
+      <div class="cal-lessons">${dayLessons.map(l => {
+        let consume = '不扣';
+        if (l.packageId) { const p = s.packages.find(pp => pp.id === l.packageId); if (p) consume = DB.calcConsume(l.duration, p.lessonDuration); }
+        const typeBadge = l.type === '1对2' ? 'badge-orange' : l.type === '小班' ? 'badge-blue' : (l.type === '大班' || l.type === '自由定制') ? 'badge-gray' : 'badge-green';
+        return `<div class="cal-lesson" style="cursor:default">
+          <div class="cal-time">${l.startTime}<span class="cal-time-end">-${l.endTime}</span></div>
+          <div class="cal-main">
+            <div class="cal-student"><span class="badge ${typeBadge}">${l.type}</span>${l.location ? ' <span class="muted">· ' + l.location + '</span>' : ''}</div>
+            <div class="cal-sub muted">${l.duration}h · 消耗 ${consume} 课时 · ¥${l.amount}${l.courtCost != null ? ' · 场地¥' + l.courtCost : ''}${l.notes ? ' · ' + l.notes : ''}</div>
+          </div>
+          <div class="cal-actions">
+            <button class="btn btn-outline btn-sm" onclick="Forms.lesson('${l.id}')">编辑</button>
+            <button class="btn btn-danger btn-sm" onclick="Actions.deleteLesson('${l.id}')">删除</button>
+          </div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('')}</div>` : '<div class="empty" style="padding:20px">暂无上课记录</div>';
 
   return `
     <div class="page-header">
@@ -1584,16 +1698,12 @@ Forms.lesson = function(lessonId, presetStudentId) {
   if (!students.length) { showToast('请先添加学生'); return; }
   const isEdit = !!l;
 
-  const studentOptions = students.map(s => {
-    const remain = Utils.remainingLessons(s);
-    const sel = (l && l.studentId === s.id) || (!l && presetStudentId === s.id) ? 'selected' : '';
-    return `<option value="${s.id}" ${sel}>${s.name}（剩余${remain}节）</option>`;
-  }).join('');
-
   openModal(isEdit ? '编辑上课记录' : '记录上课', `
     <div class="form-row">
-      <div class="form-group"><label class="form-label">学生 <span class="req">*</span></label>
-        <select class="form-select" id="l_student" onchange="Forms.lessonOnStudentChange()"><option value="">请选择</option>${studentOptions}</select>
+      <div class="form-group combobox"><label class="form-label">学生 <span class="req">*</span></label>
+        <input type="text" class="form-input" id="l_student_input" placeholder="输入姓名检索学生…" autocomplete="off" oninput="Forms.lessonStudentSearch()" onfocus="Forms.lessonStudentSearch()" onkeydown="Forms.lessonStudentKey(event)">
+        <input type="hidden" id="l_student" value="">
+        <div class="combobox-list" id="l_student_list" style="display:none"></div>
       </div>
       <div class="form-group"><label class="form-label">上课日期 <span class="req">*</span></label><input type="date" class="form-input" id="l_date" value="${l ? l.date : Utils.todayStr()}"></div>
     </div>
@@ -1631,10 +1741,73 @@ Forms.lesson = function(lessonId, presetStudentId) {
 
   // 初始选中学生时加载课时包
   if (l) {
+    const cur = DB.getStudent(l.studentId);
+    if (cur) { document.getElementById('l_student').value = l.studentId; document.getElementById('l_student_input').value = cur.name; }
     Forms.lessonOnStudentChange(l.packageId);
   } else if (presetStudentId) {
+    const cur = DB.getStudent(presetStudentId);
+    if (cur) { document.getElementById('l_student').value = presetStudentId; document.getElementById('l_student_input').value = cur.name; }
     Forms.lessonOnStudentChange();
   }
+};
+// 学生检索（combobox）
+Forms._comboIndex = -1;
+Forms.lessonStudentSearch = function() {
+  Forms._comboIndex = -1;
+  const input = document.getElementById('l_student_input');
+  const list = document.getElementById('l_student_list');
+  if (!input || !list) return;
+  const q = (input.value || '').trim();
+  const students = DB.getStudents();
+  const filtered = students.filter(s => s.name.indexOf(q) !== -1);
+  if (!filtered.length) { list.style.display = 'none'; return; }
+  list.innerHTML = filtered.map(s => {
+    const remain = Utils.remainingLessons(s);
+    const clean = s.name.replace(/'/g, '');
+    return `<div class="combobox-item" data-id="${s.id}" data-name="${clean}" onmousedown="Forms.lessonStudentPick('${s.id}','${clean}')"><span class="combobox-name">${s.name}</span><span class="combobox-meta">剩余 ${remain} 节</span></div>`;
+  }).join('');
+  list.style.display = 'block';
+};
+Forms.lessonStudentPick = function(id, name) {
+  const sidEl = document.getElementById('l_student');
+  const inputEl = document.getElementById('l_student_input');
+  const listEl = document.getElementById('l_student_list');
+  if (!sidEl || !inputEl) return;
+  sidEl.value = id;
+  inputEl.value = name;
+  if (listEl) listEl.style.display = 'none';
+  Forms._comboIndex = -1;
+  Forms.lessonOnStudentChange();
+};
+// 键盘导航：↑↓ 选择、Enter 确认、Esc 关闭
+Forms.lessonStudentKey = function(e) {
+  const list = document.getElementById('l_student_list');
+  if (!list) return;
+  const items = list.querySelectorAll('.combobox-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (list.style.display === 'none') list.style.display = 'block';
+    Forms._comboIndex = Math.min(Forms._comboIndex + 1, items.length - 1);
+    Forms._highlightCombo(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    Forms._comboIndex = Math.max(Forms._comboIndex - 1, 0);
+    Forms._highlightCombo(items);
+  } else if (e.key === 'Enter') {
+    if (Forms._comboIndex >= 0 && items[Forms._comboIndex]) {
+      e.preventDefault();
+      const el = items[Forms._comboIndex];
+      Forms.lessonStudentPick(el.dataset.id, el.dataset.name);
+    }
+  } else if (e.key === 'Escape') {
+    list.style.display = 'none';
+    Forms._comboIndex = -1;
+  }
+};
+Forms._highlightCombo = function(items) {
+  items.forEach((it, i) => it.classList.toggle('active', i === Forms._comboIndex));
+  if (items[Forms._comboIndex]) items[Forms._comboIndex].scrollIntoView({ block: 'nearest' });
 };
 Forms.lessonOnStudentChange = function(currentPkgId) {
   const sid = document.getElementById('l_student').value;
@@ -1718,6 +1891,12 @@ Forms.lessonCalcAmount = function() {
 };
 document.addEventListener('change', (e) => {
   if (e.target.id === 'l_package') { Forms.lessonCalcDuration(); Forms.lessonCalcAmount(); }
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.combobox')) {
+    const list = document.getElementById('l_student_list');
+    if (list) list.style.display = 'none';
+  }
 });
 Forms.lessonSave = function(lessonId) {
   const sid = document.getElementById('l_student').value;
