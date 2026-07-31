@@ -872,7 +872,7 @@ Pages.lessonsRender = function() {
           <td>${l.duration}h</td>
           <td>${consume}</td>
           <td class="text-bold">¥${l.amount}</td>
-          <td class="muted">${l.courtCost != null ? '¥'+l.courtCost : (l.location || '-')}</td>
+          <td class="muted">${l.courtCost != null ? '¥'+l.courtCost : '-'}${l.location ? ' · '+l.location : ''}</td>
           <td class="muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.notes || '-'}</td>
           <td>
             <button class="btn btn-outline btn-sm" onclick="Forms.lesson('${l.id}')">编辑</button>
@@ -1516,8 +1516,8 @@ Forms.lesson = function(lessonId, presetStudentId) {
     </div>
     <div class="form-row-3">
       <div class="form-group"><label class="form-label">课程类型</label>
-        <select class="form-select" id="l_type">
-          <option value="一对一" ${l&&l.type==='一对一'?'selected':''}>一对一</option>
+        <select class="form-select" id="l_type" onchange="Forms.lessonOnTypeChange()">
+          <option value="1对1" ${l&&l.type==='1对1'?'selected':''}>1对1</option>
           <option value="1对2" ${l&&l.type==='1对2'?'selected':''}>1对2</option>
           <option value="小班" ${l&&l.type==='小班'?'selected':''}>小班</option>
           <option value="自由定制" ${l&&l.type==='自由定制'?'selected':''}>自由定制</option>
@@ -1529,9 +1529,10 @@ Forms.lesson = function(lessonId, presetStudentId) {
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">金额（元）</label><input type="number" class="form-input" id="l_amount" value="${l ? l.amount : 0}" min="0"></div>
-      <div class="form-group"><label class="form-label">场地</label><input class="form-input" id="l_location" value="${l ? l.location || '' : ''}" placeholder="如：1号场地"></div>
+      <div class="form-group"><label class="form-label">场地费成本（元）</label><input type="number" class="form-input" id="l_court" value="${l && l.courtCost != null ? l.courtCost : ''}" min="0" placeholder="如：60"></div>
     </div>
-    <div class="form-group"><label class="form-label">扣减课时包</label>
+    <div class="form-group"><label class="form-label">场地</label><input class="form-input" id="l_location" value="${l ? l.location || '' : ''}" placeholder="如：1号场地"></div>
+    <div class="form-group"><label class="form-label">扣减课时包 <span style="font-weight:400;color:var(--gray-500)">（按课程类型自动匹配，可手动改）</span></label>
       <select class="form-select" id="l_package" onchange="Forms.lessonCalcAmount()"><option value="">不扣课时</option></select>
       <div class="form-hint" id="pkgInfo" style="font-size:12px;color:var(--gray-500);margin-top:4px"></div>
     </div>
@@ -1553,21 +1554,46 @@ Forms.lessonOnStudentChange = function(currentPkgId) {
   const pkgSel = document.getElementById('l_package');
   if (!sid) { pkgSel.innerHTML = '<option value="">不扣课时</option>'; document.getElementById('pkgInfo').textContent = ''; return; }
   const s = DB.getStudent(sid);
+  const curType = document.getElementById('l_type') ? DB.normalizeType(document.getElementById('l_type').value) : '';
   const allPkgs = s.packages;
   let html = '<option value="">不扣课时</option>';
-  let firstActiveId = null;
+  let firstActiveId = null, firstTypeMatchId = null;
   allPkgs.forEach(p => {
     const remain = p.totalLessons - p.usedLessons;
     const unit = Math.round(p.price / p.totalLessons);
     const pType = p.type || DB.normalizeType(p.name);
     const disabled = p.status !== 'active' || remain <= 0 ? 'disabled' : '';
     const sel = currentPkgId === p.id ? 'selected' : '';
-    if (!currentPkgId && !firstActiveId && p.status === 'active' && remain > 0) firstActiveId = p.id;
-    html += `<option value="${p.id}" ${disabled} ${sel}>${p.name}（${pType}·${p.lessonDuration||1}h/节·剩余${remain}·单价¥${unit}）</option>`;
+    if (!currentPkgId) {
+      if (!firstActiveId && p.status === 'active' && remain > 0) firstActiveId = p.id;
+      if (!firstTypeMatchId && curType && pType === curType && p.status === 'active' && remain > 0) firstTypeMatchId = p.id;
+    }
+    html += `<option value="${p.id}" ${disabled} ${sel}>${p.name}【${pType} · ${p.lessonDuration||1}h/节 · 剩${remain} · ¥${unit}】</option>`;
   });
   pkgSel.innerHTML = html;
-  // 新建时自动选中第一个可用课包
-  if (!currentPkgId && firstActiveId) pkgSel.value = firstActiveId;
+  // 自动选中：优先当前课包 → 匹配课程类型的课包 → 第一个可用课包
+  if (!currentPkgId) {
+    if (firstTypeMatchId) pkgSel.value = firstTypeMatchId;
+    else if (firstActiveId) pkgSel.value = firstActiveId;
+  }
+  Forms.lessonCalcDuration();
+  Forms.lessonCalcAmount();
+};
+// 切换课程类型时，自动把扣课时包跳到同类型的课包
+Forms.lessonOnTypeChange = function() {
+  const sid = document.getElementById('l_student').value;
+  if (!sid) return;
+  const s = DB.getStudent(sid);
+  const type = DB.normalizeType(document.getElementById('l_type').value);
+  const pkgSel = document.getElementById('l_package');
+  const cur = pkgSel.value;
+  // 当前选中的已是同类型则不改
+  if (cur) {
+    const cp = s.packages.find(p => p.id === cur);
+    if (cp && (cp.type || DB.normalizeType(cp.name)) === type) { Forms.lessonCalcDuration(); Forms.lessonCalcAmount(); return; }
+  }
+  const match = s.packages.find(p => p.status === 'active' && (p.totalLessons - p.usedLessons) > 0 && (p.type || DB.normalizeType(p.name)) === type);
+  if (match) pkgSel.value = match.id;
   Forms.lessonCalcDuration();
   Forms.lessonCalcAmount();
 };
@@ -1623,6 +1649,7 @@ Forms.lessonSave = function(lessonId) {
     packageId: document.getElementById('l_package').value || null,
     amount: +document.getElementById('l_amount').value || 0,
     location: document.getElementById('l_location').value.trim(),
+    courtCost: +document.getElementById('l_court').value || 0,
     notes: document.getElementById('l_notes').value.trim()
   };
   if (lessonId) { DB.updateLesson(lessonId, data); showToast('已更新'); }
