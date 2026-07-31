@@ -102,6 +102,8 @@ body {
 .btn-danger:hover { background: #fef2f2; }
 .btn-sm { padding: 5px 10px; font-size: 12px; }
 .btn-icon { padding: 6px 8px; font-size: 13px; }
+.fin-toggle { display: inline-flex; gap: 4px; }
+.fin-toggle .btn-sm { padding: 4px 12px; }
 
 /* ===== Tables ===== */
 .table-wrap { overflow-x: auto; }
@@ -899,8 +901,20 @@ Pages.dashboard = function() {
   const monthLessons = lessons.filter(l => Utils.isThisMonth(l.date));
   const weekDuration = Utils.effectiveDuration(weekLessons);
   const monthDuration = Utils.effectiveDuration(monthLessons);
-  const monthAmount = monthLessons.reduce((s, l) => s + (l.amount || 0), 0);
-  const monthCourt = monthLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
+
+  // 财务汇总：本月 / 上月 切换
+  if (!Pages._finMonth) Pages._finMonth = 'this';
+  let finLessons, finTitle;
+  if (Pages._finMonth === 'last') {
+    const dt = new Date(); const lm = new Date(dt.getFullYear(), dt.getMonth() - 1, 1);
+    finLessons = lessons.filter(l => { const d = new Date(l.date); return d.getFullYear() === lm.getFullYear() && d.getMonth() === lm.getMonth(); });
+    finTitle = '💰 上月财务汇总';
+  } else {
+    finLessons = monthLessons;
+    finTitle = '💰 本月财务汇总';
+  }
+  const monthAmount = finLessons.reduce((s, l) => s + (l.amount || 0), 0);
+  const monthCourt = finLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
   const monthNet = monthAmount - monthCourt;
   const students = DB.getStudents();
   const lowRemain = students.filter(s => {
@@ -996,8 +1010,11 @@ Pages.dashboard = function() {
 
     <div class="card" style="border:1px solid var(--orange-light); background:linear-gradient(135deg,#fffdf5,#ffffff)">
       <div class="flex-between mb-10">
-        <div style="font-weight:700;font-size:15px;color:var(--orange)">💰 本月财务汇总</div>
-        <span class="muted" style="font-size:12px">消课收入 − 场地费 = 净收入</span>
+        <div style="font-weight:700;font-size:15px;color:var(--orange)">${finTitle}</div>
+        <div class="fin-toggle">
+          <button class="btn btn-sm ${Pages._finMonth !== 'last' ? 'btn-orange' : 'btn-outline'}" onclick="Pages.finMonth('this')">本月</button>
+          <button class="btn btn-sm ${Pages._finMonth === 'last' ? 'btn-orange' : 'btn-outline'}" onclick="Pages.finMonth('last')">上月</button>
+        </div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:110px">
@@ -1039,6 +1056,10 @@ Pages.dashboard = function() {
       ${recentHtml}
     </div>
   `;
+};
+Pages.finMonth = function(m) {
+  Pages._finMonth = m;
+  Router.render();
 };
 
 /* ----- 上课记录 ----- */
@@ -1360,6 +1381,7 @@ Pages.stats = function() {
           <option value="day">按日（近14天）</option>
           <option value="week">按周（近8周）</option>
           <option value="month">按月（近12月）</option>
+          <option value="year">按年（近5年）</option>
         </select>
       </div>
       <div class="stat-grid">
@@ -1406,7 +1428,7 @@ Pages.statsRender = function() {
       const b = buckets.find(b => ld >= b.start && ld <= b.end);
       if (b) { b.lessons.push(l); b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
     });
-  } else {
+  } else if (dim === 'month') {
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       buckets.push({ year: d.getFullYear(), month: d.getMonth(), label: `${d.getFullYear()}/${d.getMonth()+1}`, duration: 0, amount: 0, count: 0, students: new Set(), lessons: [] });
@@ -1414,6 +1436,16 @@ Pages.statsRender = function() {
     lessons.forEach(l => {
       const ld = new Date(l.date);
       const b = buckets.find(b => b.year === ld.getFullYear() && b.month === ld.getMonth());
+      if (b) { b.lessons.push(l); b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
+    });
+  } else {
+    for (let i = 4; i >= 0; i--) {
+      const y = now.getFullYear() - i;
+      buckets.push({ year: y, label: '' + y, duration: 0, amount: 0, count: 0, students: new Set(), lessons: [] });
+    }
+    lessons.forEach(l => {
+      const ld = new Date(l.date);
+      const b = buckets.find(b => b.year === ld.getFullYear());
       if (b) { b.lessons.push(l); b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
     });
   }
