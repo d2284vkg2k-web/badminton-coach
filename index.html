@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>羽毛球教练工作台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --green: #2d8a4e;
+  --green-dark: #1f6b3a;
+  --green-light: #e8f5ec;
+  --orange: #f59e0b;
+  --orange-light: #fef3c7;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --white: #ffffff;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ===== Layout ===== */
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px; background: var(--green-dark); color: var(--white);
+  padding: 0 0 20px; position: fixed; top: 0; left: 0; bottom: 0;
+  display: flex; flex-direction: column; z-index: 100;
+  transition: transform 0.3s;
+}
+.logo {
+  padding: 20px 20px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.logo-icon { font-size: 28px; }
+.logo-text { font-size: 16px; font-weight: 700; }
+.logo-text small { display: block; font-size: 11px; font-weight: 400; opacity: 0.7; margin-top: 2px; }
+.nav { flex: 1; padding: 12px 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px; cursor: pointer; color: rgba(255,255,255,0.8);
+  transition: all 0.15s; border-left: 3px solid transparent;
+  font-size: 14px; user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+.nav-item.active { background: rgba(255,255,255,0.12); color: var(--white); border-left-color: var(--orange); }
+.nav-icon { font-size: 18px; width: 22px; text-align: center; }
+.sidebar-footer { padding: 12px 20px; font-size: 11px; opacity: 0.6; }
+
+.main { flex: 1; margin-left: 220px; padding: 24px; min-width: 0; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.page-title { font-size: 22px; font-weight: 700; }
+.page-subtitle { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+
+/* ===== Cards & Stats ===== */
+.card {
+  background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 20px; margin-bottom: 16px;
+}
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px 20px; border-left: 4px solid var(--green);
+}
+.stat-card.orange { border-left-color: var(--orange); }
+.stat-card.blue { border-left-color: var(--blue); }
+.stat-card.red { border-left-color: var(--red); }
+.stat-label { font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--gray-900); }
+.stat-unit { font-size: 13px; font-weight: 400; color: var(--gray-500); margin-left: 4px; }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer;
+  font-size: 14px; font-weight: 500; transition: all 0.15s; white-space: nowrap;
+}
+.btn-primary { background: var(--green); color: var(--white); }
+.btn-primary:hover { background: var(--green-dark); }
+.btn-orange { background: var(--orange); color: var(--white); }
+.btn-orange:hover { background: #d97706; }
+.btn-outline { background: var(--white); color: var(--gray-700); border: 1px solid var(--gray-300); }
+.btn-outline:hover { background: var(--gray-50); border-color: var(--gray-500); }
+.btn-danger { background: var(--white); color: var(--red); border: 1px solid #fecaca; }
+.btn-danger:hover { background: #fef2f2; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 6px 8px; font-size: 13px; }
+
+/* ===== Tables ===== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 10px 12px; font-size: 12px; color: var(--gray-500); font-weight: 600; border-bottom: 2px solid var(--gray-200); white-space: nowrap; }
+td { padding: 12px; border-bottom: 1px solid var(--gray-100); font-size: 13px; vertical-align: middle; }
+tr:hover td { background: var(--gray-50); }
+
+/* ===== Badges & Tags ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-green { background: var(--green-light); color: var(--green-dark); }
+.badge-orange { background: var(--orange-light); color: #92400e; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-gray { background: var(--gray-100); color: var(--gray-600); }
+.badge-red { background: #fee2e2; color: #991b1b; }
+
+/* ===== Student Cards ===== */
+.student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.student-card {
+  background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+}
+.student-card:hover { box-shadow: var(--shadow-md); border-color: var(--green); transform: translateY(-1px); }
+.student-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.student-name { font-size: 16px; font-weight: 700; }
+.student-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.progress-bar { height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+.progress-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 0.3s; }
+.progress-fill.warn { background: var(--orange); }
+.progress-fill.danger { background: var(--red); }
+.remaining-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-600); }
+
+/* ===== Forms ===== */
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 5px; }
+.form-label .req { color: var(--red); }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--gray-300); border-radius: 8px;
+  font-size: 14px; font-family: inherit; transition: border 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(45,138,78,0.1); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none;
+  align-items: flex-start; justify-content: center; z-index: 1000; padding: 40px 16px; overflow-y: auto;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--white); border-radius: var(--radius); width: 100%; max-width: 560px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15); margin: auto;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--gray-200); }
+.modal-title { font-size: 17px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray-500); padding: 0 4px; line-height: 1; }
+.modal-close:hover { color: var(--gray-900); }
+.modal-body { padding: 20px; max-height: 65vh; overflow-y: auto; }
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ===== Tabs ===== */
+.tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--gray-200); margin-bottom: 16px; overflow-x: auto; }
+.tab { padding: 8px 16px; cursor: pointer; font-size: 14px; color: var(--gray-500); border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.15s; }
+.tab:hover { color: var(--gray-700); }
+.tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 600; }
+
+/* ===== Filter bar ===== */
+.filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar .form-select, .filter-bar .form-input { width: auto; min-width: 130px; padding: 7px 10px; }
+
+/* ===== Week calendar ===== */
+.week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; }
+.week-day {
+  background: var(--white); border-radius: 8px; padding: 10px; min-height: 90px;
+  box-shadow: var(--shadow); border-top: 3px solid var(--gray-200);
+}
+.week-day.today { border-top-color: var(--orange); background: #fffbeb; }
+.week-day.has-lesson { border-top-color: var(--green); }
+.week-day-head { font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
+.week-day-head .date-num { font-size: 18px; font-weight: 700; color: var(--gray-900); display: block; }
+.week-lesson { font-size: 11px; background: var(--green-light); color: var(--green-dark); padding: 3px 6px; border-radius: 4px; margin-bottom: 3px; }
+
+/* ===== Charts ===== */
+.chart-container { position: relative; width: 100%; }
+canvas.chart { width: 100% !important; height: 240px; }
+
+/* ===== Empty state ===== */
+.empty { text-align: center; padding: 40px 20px; color: var(--gray-500); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+/* ===== Detail page ===== */
+.detail-head { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.avatar {
+  width: 56px; height: 56px; border-radius: 50%; background: var(--green);
+  color: var(--white); display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; flex-shrink: 0;
+}
+.info-row { display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; color: var(--gray-600); margin-top: 4px; }
+.info-row span { display: inline-flex; align-items: center; gap: 4px; }
+.info-label { color: var(--gray-500); }
+
+/* ===== Training plan ===== */
+.plan-item { border: 1px solid var(--gray-200); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+.plan-item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.plan-title { font-weight: 600; font-size: 14px; }
+.plan-date { font-size: 11px; color: var(--gray-500); }
+.plan-content { font-size: 13px; color: var(--gray-600); white-space: pre-wrap; line-height: 1.6; }
+
+/* ===== Package item ===== */
+.pkg-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 10px; }
+.pkg-info { flex: 1; }
+.pkg-name { font-weight: 600; font-size: 14px; }
+.pkg-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--gray-900); color: var(--white); padding: 10px 20px;
+  border-radius: 8px; font-size: 14px; z-index: 2000; opacity: 0;
+  transition: opacity 0.3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* ===== Mobile menu toggle ===== */
+.menu-toggle { display: none; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--green); color: var(--white); border: none; font-size: 22px; cursor: pointer; z-index: 101; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding: 16px; padding-bottom: 80px; }
+  .menu-toggle { display: flex; align-items: center; justify-content: center; }
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .week-grid { grid-template-columns: 1fr; }
+  .week-day { min-height: auto; }
+  .page-title { font-size: 18px; }
+}
+.muted { color: var(--gray-500); }
+.text-right { text-align: right; }
+.text-green { color: var(--green); }
+.text-orange { color: var(--orange); }
+.text-red { color: var(--red); }
+.text-bold { font-weight: 700; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.gap-8 { gap: 8px; }
+.flex { display: flex; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <span class="logo-icon">🏸</span>
+      <div class="logo-text">教练工作台<small>Badminton Coach</small></div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span>仪表盘</div>
+      <div class="nav-item" data-page="lessons"><span class="nav-icon">📝</span>上课记录</div>
+      <div class="nav-item" data-page="students"><span class="nav-icon">👥</span>学生档案</div>
+      <div class="nav-item" data-page="stats"><span class="nav-icon">📈</span>统计报表</div>
+      <div class="nav-item" data-page="backup"><span class="nav-icon">💾</span>数据备份</div>
+    </nav>
+    <div class="sidebar-footer">数据保存在本地浏览器<br>v1.0 · 单机版</div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" id="main">
+    <div id="page-content"></div>
+  </main>
+</div>
+
+<button class="menu-toggle" id="menuToggle">☰</button>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden file input for import -->
+<input type="file" id="fileInput" accept=".json" style="display:none">
+
+<!-- 内置备份数据 -->
+<script src="backup-data.js"></script>
+<script>
+/* ============================================================
+   数据层 - localStorage CRUD
+   ============================================================ */
+const DB = {
+  KEY: 'badminton_coach_db_v1',
+  data: null,
+  // 课时类型配置：决定单节课时长（小时）及课时消耗规则
+  // 消耗课时 = 实际上课时长 ÷ 单节时长
+  PKG_TYPES: {
+    '1对1':    { label: '1对1',    defaultDuration: 1,   durationOptions: [1, 1.5, 2],  desc: '一对一私教，可选单节时长' },
+    '1对2':    { label: '1对2',    defaultDuration: 1.5, durationOptions: [1.5],         desc: '一对二课程，固定1.5小时/节' },
+    '小班':    { label: '小班',    defaultDuration: 1.5, durationOptions: [1.5],         desc: '小班课程，固定1.5小时/节' },
+    '自由定制':{ label: '自由定制', defaultDuration: 1,   durationOptions: [],            desc: '由客户填课包时决定单节时长' }
+  },
+  // 识别课包/课程的课时类型
+  normalizeType(name) {
+    const n = (name || '').toLowerCase();
+    if (name === '1对2' || n.includes('1v2') || n.includes('1对2')) return '1对2';
+    if (name === '小班' || (name || '').includes('小班')) return '小班';
+    if (name === '自由定制' || (name || '').includes('自由')) return '自由定制';
+    return '1对1';
+  },
+  // 计算消课数：实际上课时长 ÷ 单节时长
+  calcConsume(duration, lessonDuration) {
+    if (!lessonDuration || lessonDuration <= 0) lessonDuration = 1;
+    return Math.max(0, Math.round((duration / lessonDuration) * 10) / 10);
+  },
+  init() {
+    const raw = localStorage.getItem(this.KEY);
+    if (raw) {
+      this.data = JSON.parse(raw);
+      this.migrate();
+    } else {
+      this.data = JSON.parse(JSON.stringify(BACKUP_DATA));
+      this.migrate();
+      this.save();
+    }
+  },
+  // 数据迁移：为旧课包补充 lessonDuration 字段
+  migrate() {
+    this.data.students.forEach(s => {
+      if (!s.packages) s.packages = [];
+      s.packages.forEach(p => {
+        if (p.lessonDuration === undefined) {
+          p.lessonDuration = this.PKG_TYPES[this.normalizeType(p.name)].defaultDuration;
+        }
+        if (p.status === undefined) p.status = 'active';
+      });
+    });
+    if (!this.data.lessons) this.data.lessons = [];
+  },
+  save() {
+    localStorage.setItem(this.KEY, JSON.stringify(this.data));
+  },
+  uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  },
+  // Students
+  getStudents() { return this.data.students; },
+  getStudent(id) { return this.data.students.find(s => s.id === id); },
+  addStudent(s) {
+    s.id = this.uid();
+    s.packages = s.packages || [];
+    s.trainingPlans = s.trainingPlans || [];
+    s.createdAt = Date.now();
+    this.data.students.push(s);
+    this.save();
+    return s;
+  },
+  updateStudent(id, patch) {
+    const s = this.getStudent(id);
+    if (s) { Object.assign(s, patch); this.save(); }
+  },
+  deleteStudent(id) {
+    this.data.students = this.data.students.filter(s => s.id !== id);
+    this.data.lessons = this.data.lessons.filter(l => l.studentId !== id);
+    this.save();
+  },
+  // Packages
+  addPackage(studentId, pkg) {
+    const s = this.getStudent(studentId);
+    if (!s) return;
+    pkg.id = this.uid();
+    pkg.usedLessons = 0;
+    pkg.status = 'active';
+    pkg.lessonDuration = pkg.lessonDuration || this.PKG_TYPES[this.normalizeType(pkg.name)].defaultDuration;
+    pkg.type = pkg.type || this.normalizeType(pkg.name);
+    s.packages.push(pkg);
+    this.save();
+  },
+  deletePackage(studentId, pkgId) {
+    const s = this.getStudent(studentId);
+    if (!s) return;
+    s.packages = s.packages.filter(p => p.id !== pkgId);
+    this.save();
+  },
+  getActivePackage(studentId) {
+    const s = this.getStudent(studentId);
+    if (!s) return null;
+    return s.packages.find(p => p.status === 'active' && p.usedLessons < p.totalLessons);
+  },
+  // Training plans
+  addPlan(studentId, plan) {
+    const s = this.getStudent(studentId);
+    if (!s) return;
+    plan.id = this.uid();
+    plan.createdAt = Date.now();
+    s.trainingPlans = s.trainingPlans || [];
+    s.trainingPlans.unshift(plan);
+    this.save();
+  },
+  deletePlan(studentId, planId) {
+    const s = this.getStudent(studentId);
+    if (!s) return;
+    s.trainingPlans = s.trainingPlans.filter(p => p.id !== planId);
+    this.save();
+  },
+  // Lessons
+  getLessons() { return this.data.lessons; },
+  addLesson(l) {
+    l.id = this.uid();
+    l.createdAt = Date.now();
+    this.data.lessons.push(l);
+    // 扣减课时包：消耗 = 实际时长 ÷ 单节时长
+    if (l.packageId) {
+      const s = this.getStudent(l.studentId);
+      const pkg = s && s.packages.find(p => p.id === l.packageId);
+      if (pkg) {
+        const consume = this.calcConsume(l.duration, pkg.lessonDuration);
+        pkg.usedLessons = Math.min(pkg.totalLessons, Math.round((pkg.usedLessons + consume) * 10) / 10);
+        if (pkg.usedLessons >= pkg.totalLessons) pkg.status = 'finished';
+      }
+    }
+    this.save();
+    return l;
+  },
+  updateLesson(id, patch) {
+    const l = this.data.lessons.find(x => x.id === id);
+    if (!l) return;
+    // 如果换了课时包或时长变化，先回退旧的，再扣减新的
+    const newPkgId = patch.packageId !== undefined ? patch.packageId : l.packageId;
+    const newDuration = patch.duration !== undefined ? patch.duration : l.duration;
+    if (newPkgId !== l.packageId || newDuration !== l.duration) {
+      // 回退旧课包
+      if (l.packageId) {
+        const s = this.getStudent(l.studentId);
+        const oldPkg = s && s.packages.find(p => p.id === l.packageId);
+        if (oldPkg) {
+          const oldConsume = this.calcConsume(l.duration, oldPkg.lessonDuration);
+          oldPkg.usedLessons = Math.max(0, Math.round((oldPkg.usedLessons - oldConsume) * 10) / 10);
+          if (oldPkg.usedLessons < oldPkg.totalLessons) oldPkg.status = 'active';
+        }
+      }
+      // 扣减新课包
+      if (newPkgId) {
+        const s = this.getStudent(l.studentId);
+        const newPkg = s && s.packages.find(p => p.id === newPkgId);
+        if (newPkg) {
+          const newConsume = this.calcConsume(newDuration, newPkg.lessonDuration);
+          newPkg.usedLessons = Math.min(newPkg.totalLessons, Math.round((newPkg.usedLessons + newConsume) * 10) / 10);
+          if (newPkg.usedLessons >= newPkg.totalLessons) newPkg.status = 'finished';
+        }
+      }
+    }
+    Object.assign(l, patch);
+    this.save();
+  },
+  deleteLesson(id) {
+    const l = this.data.lessons.find(x => x.id === id);
+    if (!l) return;
+    // 回退课时包：按实际消耗恢复
+    if (l.packageId) {
+      const s = this.getStudent(l.studentId);
+      const pkg = s && s.packages.find(p => p.id === l.packageId);
+      if (pkg) {
+        const consume = this.calcConsume(l.duration, pkg.lessonDuration);
+        pkg.usedLessons = Math.max(0, Math.round((pkg.usedLessons - consume) * 10) / 10);
+        if (pkg.usedLessons < pkg.totalLessons) pkg.status = 'active';
+      }
+    }
+    this.data.lessons = this.data.lessons.filter(x => x.id !== id);
+    this.save();
+  },
+  // Backup
+  exportData() {
+    return JSON.stringify(this.data, null, 2);
+  },
+  importData(jsonStr) {
+    const parsed = JSON.parse(jsonStr);
+    if (!parsed.students || !parsed.lessons) throw new Error('数据格式不正确');
+    this.data = parsed;
+    this.save();
+  },
+  // 备份数据已外置到 backup-data.js（BACKUP_DATA），无需 seed
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const Utils = {
+  todayStr() { return new Date().toISOString().slice(0, 10); },
+  formatDate(d) {
+    if (!d) return '-';
+    const dt = new Date(d);
+    return `${dt.getMonth()+1}月${dt.getDate()}日`;
+  },
+  formatDateFull(d) {
+    if (!d) return '-';
+    const dt = new Date(d);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  },
+  weekRange(date) {
+    const d = new Date(date);
+    const day = d.getDay() || 7; // 周日=7
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - day + 1);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return { start: monday, end: sunday };
+  },
+  isSameDay(d1, d2) {
+    return new Date(d1).toDateString() === new Date(d2).toDateString();
+  },
+  isThisWeek(date) {
+    const wr = Utils.weekRange(new Date());
+    const d = new Date(date);
+    return d >= wr.start && d <= wr.end;
+  },
+  isThisMonth(date) {
+    const d = new Date(date);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  },
+  getWeekDates(date) {
+    const wr = Utils.weekRange(date);
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(wr.start);
+      d.setDate(wr.start.getDate() + i);
+      dates.push(d);
+    }
+    return dates;
+  },
+  calcDuration(start, end) {
+    if (!start || !end) return 1;
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    return Math.max(0.5, Math.round(((eh * 60 + em - sh * 60 - sm) / 60) * 2) / 2);
+  },
+  age(birthDate) {
+    if (!birthDate) return '-';
+    const b = new Date(birthDate);
+    const now = new Date();
+    let age = now.getFullYear() - b.getFullYear();
+    if (now.getMonth() < b.getMonth() || (now.getMonth() === b.getMonth() && now.getDate() < b.getDate())) age--;
+    return age;
+  },
+  remainingLessons(student) {
+    if (!student.packages || !student.packages.length) return 0;
+    return student.packages
+      .filter(p => p.status === 'active')
+      .reduce((sum, p) => sum + (p.totalLessons - p.usedLessons), 0);
+  },
+  totalLessons(student) {
+    if (!student.packages || !student.packages.length) return 0;
+    return student.packages.reduce((sum, p) => sum + p.totalLessons, 0);
+  }
+};
+
+/* ============================================================
+   Toast & Modal
+   ============================================================ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function openModal(title, bodyHtml, footerHtml) {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${title}</div>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">${bodyHtml}</div>
+    ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ''}
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') closeModal();
+});
+
+/* ============================================================
+   GitHub 云端同步（多设备共享数据）
+   数据存于仓库根目录的 data.json，通过 GitHub API 读写
+   Token 仅存浏览器本地，不上传任何第三方
+   ============================================================ */
+const GitHubSync = {
+  KEY_TOKEN: 'gh_token', KEY_OWNER: 'gh_owner', KEY_REPO: 'gh_repo',
+  getToken() { return localStorage.getItem(this.KEY_TOKEN) || ''; },
+  getOwner() { return localStorage.getItem(this.KEY_OWNER) || ''; },
+  getRepo()  { return localStorage.getItem(this.KEY_REPO) || ''; },
+  saveConfig() {
+    const token = document.getElementById('gh_token').value.trim();
+    const owner = document.getElementById('gh_owner').value.trim();
+    const repo = document.getElementById('gh_repo').value.trim();
+    if (!token || !owner || !repo) { showToast('请填写 Token / 拥有者 / 仓库名', true); return; }
+    localStorage.setItem(this.KEY_TOKEN, token);
+    localStorage.setItem(this.KEY_OWNER, owner);
+    localStorage.setItem(this.KEY_REPO, repo);
+    showToast('云端配置已保存');
+    this.status();
+  },
+  api(path, opts = {}) {
+    const token = this.getToken();
+    if (!token) { showToast('请先保存云端配置', true); return null; }
+    opts.headers = Object.assign({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }, opts.headers || {});
+    if (opts.body) opts.headers['Content-Type'] = 'application/json';
+    return fetch('https://api.github.com' + path, opts);
+  },
+  // 备份到云端：把当前数据写入仓库 data.json
+  async upload() {
+    const owner = this.getOwner(), repo = this.getRepo();
+    if (!owner || !repo) { showToast('请先保存云端配置', true); return; }
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB.data, null, 2))));
+    const path = '/repos/' + owner + '/' + repo + '/contents/data.json';
+    // 先看是否存在（需提供 sha 才能更新）
+    let sha = null;
+    try {
+      const r = await this.api(path);
+      if (r && r.ok) { const d = await r.json(); sha = d.sha; }
+    } catch (e) {}
+    const body = { message: '数据同步 ' + new Date().toLocaleString('zh-CN'), content };
+    if (sha) body.sha = sha;
+    const res = await this.api(path, { method: sha ? 'PUT' : 'PUT', body: JSON.stringify(body) });
+    if (res && res.ok) { showToast('已备份到云端 ☁️'); this.status(); }
+    else { const e = await res.text(); showToast('备份失败：' + (e.slice(0, 80) || res.status), true); }
+  },
+  // 从云端恢复
+  async download() {
+    const owner = this.getOwner(), repo = this.getRepo();
+    if (!owner || !repo) { showToast('请先保存云端配置', true); return; }
+    const res = await this.api('/repos/' + owner + '/' + repo + '/contents/data.json');
+    if (!res || !res.ok) { showToast('云端暂无数据，请先备份', true); return; }
+    const d = await res.json();
+    try {
+      const text = decodeURIComponent(escape(atob(d.content.replace(/\s/g, ''))));
+      const data = JSON.parse(text);
+      if (!data.students || !data.lessons) throw new Error('格式错误');
+      DB.data = data; DB.migrate(); DB.save();
+      showToast('已从云端恢复 ✅');
+      Router.go('dashboard');
+    } catch (e) { showToast('恢复失败：' + e.message, true); }
+  },
+  // 查看云端状态
+  async status() {
+    const el = document.getElementById('gh_status');
+    if (!el) return;
+    const owner = this.getOwner(), repo = this.getRepo();
+    if (!owner || !repo) { el.innerHTML = '尚未配置云端同步'; return; }
+    const res = await this.api('/repos/' + owner + '/' + repo + '/contents/data.json');
+    if (res && res.ok) {
+      const d = await res.json();
+      el.innerHTML = '☁️ 云端数据已存在 · 更新于 <b>' + new Date(d.commit.author.date).toLocaleString('zh-CN') + '</b> · 大小 ' + (d.size / 1024).toFixed(1) + 'KB';
+    } else {
+      el.innerHTML = '☁️ 云端暂无 data.json，点「备份到云端」上传第一份数据';
+    }
+  }
+};
+
+/* ============================================================
+   页面路由
+   ============================================================ */
+const Router = {
+  current: 'dashboard',
+  currentParam: null,
+  go(page, param) {
+    this.current = page;
+    this.currentParam = param || null;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+    this.render();
+    // 关闭移动端菜单
+    document.getElementById('sidebar').classList.remove('open');
+    window.scrollTo(0, 0);
+  },
+  render() {
+    const container = document.getElementById('page-content');
+    const p = this.current;
+    if (p === 'dashboard') container.innerHTML = Pages.dashboard();
+    else if (p === 'lessons') container.innerHTML = Pages.lessons();
+    else if (p === 'students') {
+      if (this.currentParam) container.innerHTML = Pages.studentDetail(this.currentParam);
+      else container.innerHTML = Pages.students();
+    }
+    else if (p === 'stats') container.innerHTML = Pages.stats();
+    else if (p === 'backup') container.innerHTML = Pages.backup();
+    // 渲染后执行初始化
+    if (Pages[`${p}Init`]) Pages[`${p}Init`]();
+  }
+};
+
+/* ============================================================
+   页面模块
+   ============================================================ */
+const Pages = {};
+
+/* ----- 仪表盘 ----- */
+Pages.dashboard = function() {
+  const lessons = DB.getLessons();
+  const today = Utils.todayStr();
+  const todayLessons = lessons.filter(l => l.date === today);
+  const weekLessons = lessons.filter(l => Utils.isThisWeek(l.date));
+  const monthLessons = lessons.filter(l => Utils.isThisMonth(l.date));
+  const weekDuration = weekLessons.reduce((s, l) => s + (l.duration || 1), 0);
+  const monthDuration = monthLessons.reduce((s, l) => s + (l.duration || 1), 0);
+  const monthAmount = monthLessons.reduce((s, l) => s + (l.amount || 0), 0);
+  const students = DB.getStudents();
+  const lowRemain = students.filter(s => {
+    const r = Utils.remainingLessons(s);
+    return r > 0 && r <= 2;
+  });
+
+  // 本周日历
+  const weekDates = Utils.getWeekDates(new Date());
+  const weekDayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  const weekHtml = weekDates.map((d, i) => {
+    const dateStr = Utils.formatDateFull(d);
+    const dayLessons = lessons.filter(l => l.date === dateStr);
+    const isToday = Utils.isSameDay(d, new Date());
+    const lessonHtml = dayLessons.map(l => `<div class="week-lesson">${l.startTime} ${l.studentName}</div>`).join('');
+    return `<div class="week-day ${isToday ? 'today' : ''} ${dayLessons.length ? 'has-lesson' : ''}">
+      <div class="week-day-head">${weekDayNames[i]}<span class="date-num">${d.getDate()}</span></div>
+      ${lessonHtml || '<div class="muted" style="font-size:11px">无课</div>'}
+    </div>`;
+  }).join('');
+
+  // 最近记录
+  const recent = [...lessons].sort((a, b) => (b.date + b.startTime).localeCompare(a.date + a.startTime)).slice(0, 6);
+  const recentHtml = recent.length ? `<div class="table-wrap"><table>
+    <thead><tr><th>日期</th><th>时间</th><th>学生</th><th>类型</th><th>时长</th><th>金额</th></tr></thead>
+    <tbody>${recent.map(l => `<tr style="cursor:pointer" onclick="Router.go('students','${l.studentId}')">
+      <td>${Utils.formatDate(l.date)}</td>
+      <td>${l.startTime}-${l.endTime}</td>
+      <td>${l.studentName}</td>
+      <td><span class="badge badge-blue">${l.type}</span></td>
+      <td>${l.duration}h</td>
+      <td class="text-bold">¥${l.amount}</td>
+    </tr>`).join('')}</tbody></table></div>` : '<div class="empty"><div class="empty-icon">📝</div>暂无上课记录</div>';
+
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-title">仪表盘</div>
+        <div class="page-subtitle">${new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
+      </div>
+      <button class="btn btn-primary" onclick="Forms.lesson()">+ 记录上课</button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card orange">
+        <div class="stat-label">今日上课</div>
+        <div class="stat-value">${todayLessons.length}<span class="stat-unit">节</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">本周课时</div>
+        <div class="stat-value">${weekDuration}<span class="stat-unit">小时</span></div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">本月课时</div>
+        <div class="stat-value">${monthDuration}<span class="stat-unit">小时</span></div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">本月收入</div>
+        <div class="stat-value">¥${monthAmount}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex-between mb-8">
+        <div style="font-weight:700;font-size:15px">本周日程</div>
+        <span class="muted" style="font-size:12px">共 ${weekLessons.length} 节课</span>
+      </div>
+      <div class="week-grid">${weekHtml}</div>
+    </div>
+
+    ${lowRemain.length ? `<div class="card" style="border-left:4px solid var(--orange)">
+      <div style="font-weight:700;font-size:15px;margin-bottom:10px">⚠️ 课时不足提醒</div>
+      ${lowRemain.map(s => `<div class="flex-between" style="padding:6px 0">
+        <span>${s.name}（${s.level}）</span>
+        <span class="text-orange text-bold">剩余 ${Utils.remainingLessons(s)} 节</span>
+      </div>`).join('')}
+    </div>` : ''}
+
+    <div class="card">
+      <div class="flex-between mb-8">
+        <div style="font-weight:700;font-size:15px">最近上课记录</div>
+        <button class="btn btn-outline btn-sm" onclick="Router.go('lessons')">查看全部</button>
+      </div>
+      ${recentHtml}
+    </div>
+  `;
+};
+
+/* ----- 上课记录 ----- */
+Pages.lessons = function() {
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-title">上课记录</div>
+        <div class="page-subtitle">管理所有上课记录与消课明细</div>
+      </div>
+      <button class="btn btn-primary" onclick="Forms.lesson()">+ 记录上课</button>
+    </div>
+    <div class="card">
+      <div class="filter-bar">
+        <select class="form-select" id="lessonFilter" onchange="Pages.lessonsRender()">
+          <option value="all">全部记录</option>
+          <option value="today">今天</option>
+          <option value="week">本周</option>
+          <option value="month">本月</option>
+        </select>
+        <input type="text" class="form-input" id="lessonSearch" placeholder="搜索学生姓名..." oninput="Pages.lessonsRender()" style="min-width:180px">
+        <div class="flex gap-8" style="margin-left:auto">
+          <select class="form-select" id="lessonSort" onchange="Pages.lessonsRender()">
+            <option value="desc">最新优先</option>
+            <option value="asc">最早优先</option>
+          </select>
+        </div>
+      </div>
+      <div id="lessonTable"></div>
+    </div>
+  `;
+};
+Pages.lessonsInit = function() { Pages.lessonsRender(); };
+Pages.lessonsRender = function() {
+  const filter = document.getElementById('lessonFilter').value;
+  const search = (document.getElementById('lessonSearch').value || '').trim();
+  const sort = document.getElementById('lessonSort').value;
+  let lessons = DB.getLessons();
+  if (filter === 'today') lessons = lessons.filter(l => l.date === Utils.todayStr());
+  else if (filter === 'week') lessons = lessons.filter(l => Utils.isThisWeek(l.date));
+  else if (filter === 'month') lessons = lessons.filter(l => Utils.isThisMonth(l.date));
+  if (search) lessons = lessons.filter(l => l.studentName.includes(search));
+  lessons.sort((a, b) => {
+    const cmp = (b.date + b.startTime).localeCompare(a.date + a.startTime);
+    return sort === 'asc' ? -cmp : cmp;
+  });
+
+  const totalDuration = lessons.reduce((s, l) => s + (l.duration || 1), 0);
+  const totalAmount = lessons.reduce((s, l) => s + (l.amount || 0), 0);
+
+  const html = lessons.length ? `
+    <div class="flex-between mb-8" style="padding:8px 0;border-bottom:1px solid var(--gray-100)">
+      <span class="muted">共 ${lessons.length} 条记录</span>
+      <span class="muted">总时长 <b class="text-green">${totalDuration}h</b> · 总金额 <b class="text-green">¥${totalAmount}</b></span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>日期</th><th>时间</th><th>学生</th><th>类型</th><th>时长</th><th>消耗课时</th><th>金额</th><th>场地费</th><th>备注</th><th>操作</th></tr></thead>
+      <tbody>
+        ${lessons.map(l => {
+          const s = DB.getStudent(l.studentId);
+          const pkg = s && s.packages.find(p => p.id === l.packageId);
+          const consume = pkg ? DB.calcConsume(l.duration, pkg.lessonDuration) : l.duration;
+          return `<tr>
+          <td>${Utils.formatDateFull(l.date)}</td>
+          <td>${l.startTime}-${l.endTime}</td>
+          <td><a onclick="Router.go('students','${l.studentId}')" style="cursor:pointer;color:var(--green);font-weight:600">${l.studentName}</a></td>
+          <td><span class="badge ${l.type==='1对2'?'badge-orange':l.type==='小班'?'badge-blue':'badge-green'}">${l.type}</span></td>
+          <td>${l.duration}h</td>
+          <td>${consume}</td>
+          <td class="text-bold">¥${l.amount}</td>
+          <td class="muted">${l.courtCost != null ? '¥'+l.courtCost : (l.location || '-')}</td>
+          <td class="muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.notes || '-'}</td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="Forms.lesson('${l.id}')">编辑</button>
+            <button class="btn btn-danger btn-sm" onclick="Actions.deleteLesson('${l.id}')">删除</button>
+          </td>
+        </tr>`; }).join('')}
+      </tbody>
+    </table></div>
+  ` : '<div class="empty"><div class="empty-icon">📝</div>暂无上课记录<br><button class="btn btn-primary mt-12" onclick="Forms.lesson()">+ 记录第一节课</button></div>';
+
+  document.getElementById('lessonTable').innerHTML = html;
+};
+
+/* ----- 学生档案列表 ----- */
+Pages.students = function() {
+  const students = DB.getStudents();
+  const cards = students.map(s => {
+    const total = Utils.totalLessons(s);
+    const used = s.packages.reduce((sum, p) => sum + p.usedLessons, 0);
+    const remaining = Utils.remainingLessons(s);
+    const pct = total > 0 ? Math.round((used / total) * 100) : 0;
+    const cls = remaining <= 2 ? 'danger' : remaining <= 4 ? 'warn' : '';
+    const noPkg = !s.packages || !s.packages.length;
+    return `<div class="student-card" onclick="Router.go('students','${s.id}')">
+      <div class="student-card-head">
+        <div>
+          <div class="student-name">${s.name} <span class="badge badge-gray">${s.level}</span></div>
+          <div class="student-meta">${s.gender} · ${Utils.age(s.birthDate)}岁 · ${s.phone || '无电话'}</div>
+        </div>
+        ${remaining <= 2 && remaining > 0 ? '<span class="badge badge-orange">需续费</span>' : ''}
+        ${noPkg ? '<span class="badge badge-red">无课包</span>' : ''}
+      </div>
+      ${noPkg ? '<div class="muted" style="font-size:12px">暂无课时包</div>' : `
+        <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="remaining-info">
+          <span>已用 ${used} / ${total} 节</span>
+          <span class="${remaining <= 2 ? 'text-orange text-bold' : ''}">剩余 ${remaining} 节</span>
+        </div>`}
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-title">学生档案</div>
+        <div class="page-subtitle">共 ${students.length} 名学生</div>
+      </div>
+      <button class="btn btn-primary" onclick="Forms.student()">+ 添加学生</button>
+    </div>
+    ${students.length ? `<div class="student-grid">${cards}</div>` : '<div class="card empty"><div class="empty-icon">👥</div>暂无学生<br><button class="btn btn-primary mt-12" onclick="Forms.student()">+ 添加第一名学生</button></div>'}
+  `;
+};
+
+/* ----- 学生详情 ----- */
+Pages.studentDetail = function(id) {
+  const s = DB.getStudent(id);
+  if (!s) { Router.go('students'); return ''; }
+  const lessons = DB.getLessons().filter(l => l.studentId === id).sort((a, b) => (b.date + b.startTime).localeCompare(a.date + a.startTime));
+  const totalDuration = lessons.reduce((sum, l) => sum + (l.duration || 1), 0);
+  const totalAmount = lessons.reduce((sum, l) => sum + (l.amount || 0), 0);
+
+  const pkgHtml = (s.packages && s.packages.length) ? s.packages.map(p => {
+    const remaining = p.totalLessons - p.usedLessons;
+    const unitPrice = Math.round(p.price / p.totalLessons);
+    const pct = Math.round((p.usedLessons / p.totalLessons) * 100);
+    const cls = remaining <= 2 ? 'danger' : remaining <= 4 ? 'warn' : '';
+    const pType = p.type || DB.normalizeType(p.name);
+    const pTypeBadge = pType === '1对2' ? 'badge-orange' : pType === '小班' ? 'badge-blue' : pType === '自由定制' ? 'badge-gray' : 'badge-green';
+    return `<div class="pkg-item">
+      <div class="pkg-info">
+        <div class="pkg-name">${p.name} <span class="badge ${pTypeBadge}">${pType}</span> <span class="badge badge-gray">${p.lessonDuration || 1}h/节</span> ${p.status === 'finished' ? '<span class="badge badge-gray">已完成</span>' : '<span class="badge badge-green">进行中</span>'}</div>
+        <div class="pkg-meta">购买日 ${Utils.formatDateFull(p.purchaseDate)} · 单价 ¥${unitPrice} · 总价 ¥${p.price}</div>
+        <div class="progress-bar mt-12"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="remaining-info"><span>已用 ${p.usedLessons} / ${p.totalLessons}</span><span class="${remaining <= 2 ? 'text-orange text-bold' : ''}">剩余 ${remaining}</span></div>
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-outline btn-sm" onclick="Forms.package('${id}','${p.id}')">编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="Actions.deletePackage('${id}','${p.id}')">删除</button>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty" style="padding:20px"><div class="empty-icon">📦</div>暂无课时包</div>';
+
+  const planHtml = (s.trainingPlans && s.trainingPlans.length) ? s.trainingPlans.map(p => `
+    <div class="plan-item">
+      <div class="plan-item-head">
+        <div class="plan-title">${p.title}</div>
+        <button class="btn btn-danger btn-sm" onclick="Actions.deletePlan('${id}','${p.id}')">删除</button>
+      </div>
+      <div class="plan-date">${Utils.formatDateFull(p.createdAt)}</div>
+      <div class="plan-content mt-12">${p.content}</div>
+    </div>
+  `).join('') : '<div class="empty" style="padding:20px"><div class="empty-icon">📋</div>暂无训练计划</div>';
+
+  const lessonHtml = lessons.length ? `<div class="table-wrap"><table>
+    <thead><tr><th>日期</th><th>时间</th><th>类型</th><th>时长</th><th>金额</th><th>备注</th></tr></thead>
+    <tbody>${lessons.map(l => `<tr>
+      <td>${Utils.formatDateFull(l.date)}</td>
+      <td>${l.startTime}-${l.endTime}</td>
+      <td><span class="badge badge-blue">${l.type}</span></td>
+      <td>${l.duration}h</td>
+      <td class="text-bold">¥${l.amount}</td>
+      <td class="muted">${l.notes || '-'}</td>
+    </tr>`).join('')}</tbody></table></div>` : '<div class="empty" style="padding:20px">暂无上课记录</div>';
+
+  return `
+    <div class="page-header">
+      <div class="flex" style="gap:12px;align-items:center">
+        <button class="btn btn-outline btn-sm" onclick="Router.go('students')">← 返回</button>
+        <div class="page-title">学生档案</div>
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-outline" onclick="Forms.student('${id}')">编辑信息</button>
+        <button class="btn btn-danger" onclick="Actions.deleteStudent('${id}')">删除学生</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="detail-head">
+        <div class="avatar">${s.name.charAt(0)}</div>
+        <div style="flex:1">
+          <div style="font-size:20px;font-weight:700">${s.name} <span class="badge badge-gray">${s.level}</span></div>
+          <div class="info-row">
+            <span><span class="info-label">性别:</span> ${s.gender}</span>
+            <span><span class="info-label">年龄:</span> ${Utils.age(s.birthDate)}岁</span>
+            <span><span class="info-label">电话:</span> ${s.phone || '-'}</span>
+            <span><span class="info-label">加入:</span> ${Utils.formatDateFull(s.joinDate)}</span>
+          </div>
+          ${s.notes ? `<div class="mt-12" style="font-size:13px;color:var(--gray-600)"><span class="info-label">备注:</span> ${s.notes}</div>` : ''}
+        </div>
+      </div>
+      <div class="stat-grid" style="margin-bottom:0;margin-top:16px">
+        <div class="stat-card"><div class="stat-label">总课时</div><div class="stat-value">${totalDuration}<span class="stat-unit">h</span></div></div>
+        <div class="stat-card orange"><div class="stat-label">总消课金额</div><div class="stat-value">¥${totalAmount}</div></div>
+        <div class="stat-card blue"><div class="stat-label">上课次数</div><div class="stat-value">${lessons.length}<span class="stat-unit">次</span></div></div>
+        <div class="stat-card ${Utils.remainingLessons(s) <= 2 ? 'red' : ''}"><div class="stat-label">剩余课时</div><div class="stat-value">${Utils.remainingLessons(s)}<span class="stat-unit">节</span></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex-between mb-8">
+        <div style="font-weight:700;font-size:15px">课时包</div>
+        <button class="btn btn-orange btn-sm" onclick="Forms.package('${id}')">+ 购买课时包</button>
+      </div>
+      ${pkgHtml}
+    </div>
+
+    <div class="card">
+      <div class="flex-between mb-8">
+        <div style="font-weight:700;font-size:15px">训练计划</div>
+        <button class="btn btn-outline btn-sm" onclick="Forms.plan('${id}')">+ 添加计划</button>
+      </div>
+      ${planHtml}
+    </div>
+
+    <div class="card">
+      <div class="flex-between mb-8">
+        <div style="font-weight:700;font-size:15px">上课记录</div>
+        <button class="btn btn-primary btn-sm" onclick="Forms.lesson(null,'${id}')">+ 记录上课</button>
+      </div>
+      ${lessonHtml}
+    </div>
+  `;
+};
+
+/* ----- 统计报表 ----- */
+Pages.stats = function() {
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-title">统计报表</div>
+        <div class="page-subtitle">按不同维度查看课时与收入统计</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="filter-bar">
+        <label style="font-weight:600;font-size:13px">维度：</label>
+        <select class="form-select" id="statsDim" onchange="Pages.statsRender()">
+          <option value="day">按日（近14天）</option>
+          <option value="week">按周（近8周）</option>
+          <option value="month">按月（近12月）</option>
+        </select>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">总课时</div><div class="stat-value" id="statDuration">0<span class="stat-unit">h</span></div></div>
+        <div class="stat-card orange"><div class="stat-label">总金额</div><div class="stat-value" id="statAmount">¥0</div></div>
+        <div class="stat-card blue"><div class="stat-label">总上课数</div><div class="stat-value" id="statCount">0<span class="stat-unit">节</span></div></div>
+        <div class="stat-card red"><div class="stat-label">活跃学生</div><div class="stat-value" id="statStudents">0<span class="stat-unit">人</span></div></div>
+      </div>
+      <div style="font-weight:700;font-size:14px;margin:16px 0 8px">课时与收入趋势</div>
+      <div class="chart-container"><canvas class="chart" id="chartTrend"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700;font-size:14px;margin-bottom:12px">学生收入分布</div>
+      <div id="studentStats"></div>
+    </div>
+  `;
+};
+Pages.statsInit = function() { Pages.statsRender(); };
+Pages.statsRender = function() {
+  const dim = document.getElementById('statsDim').value;
+  const lessons = DB.getLessons();
+  const now = new Date();
+
+  let buckets = [];
+  if (dim === 'day') {
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now); d.setDate(now.getDate() - i);
+      const key = Utils.formatDateFull(d);
+      buckets.push({ key, label: `${d.getMonth()+1}/${d.getDate()}`, duration: 0, amount: 0, count: 0, students: new Set() });
+    }
+    lessons.forEach(l => {
+      const b = buckets.find(b => b.key === l.date);
+      if (b) { b.duration += l.duration || 1; b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
+    });
+  } else if (dim === 'week') {
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(now); d.setDate(now.getDate() - i * 7);
+      const wr = Utils.weekRange(d);
+      buckets.push({ start: wr.start, end: wr.end, label: `${wr.start.getMonth()+1}/${wr.start.getDate()}-${wr.end.getMonth()+1}/${wr.end.getDate()}`, duration: 0, amount: 0, count: 0, students: new Set() });
+    }
+    lessons.forEach(l => {
+      const ld = new Date(l.date);
+      const b = buckets.find(b => ld >= b.start && ld <= b.end);
+      if (b) { b.duration += l.duration || 1; b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
+    });
+  } else {
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({ year: d.getFullYear(), month: d.getMonth(), label: `${d.getFullYear()}/${d.getMonth()+1}`, duration: 0, amount: 0, count: 0, students: new Set() });
+    }
+    lessons.forEach(l => {
+      const ld = new Date(l.date);
+      const b = buckets.find(b => b.year === ld.getFullYear() && b.month === ld.getMonth());
+      if (b) { b.duration += l.duration || 1; b.amount += l.amount || 0; b.count++; l.studentId && b.students.add(l.studentId); }
+    });
+  }
+
+  const totalDuration = buckets.reduce((s, b) => s + b.duration, 0);
+  const totalAmount = buckets.reduce((s, b) => s + b.amount, 0);
+  const totalCount = buckets.reduce((s, b) => s + b.count, 0);
+  const allStudents = new Set();
+  buckets.forEach(b => b.students.forEach(s => allStudents.add(s)));
+
+  document.getElementById('statDuration').innerHTML = `${totalDuration}<span class="stat-unit">h</span>`;
+  document.getElementById('statAmount').textContent = `¥${totalAmount}`;
+  document.getElementById('statCount').innerHTML = `${totalCount}<span class="stat-unit">节</span>`;
+  document.getElementById('statStudents').innerHTML = `${allStudents.size}<span class="stat-unit">人</span>`;
+
+  // 画图
+  Charts.trend(document.getElementById('chartTrend'), buckets);
+
+  // 学生收入分布
+  const studentMap = {};
+  lessons.forEach(l => {
+    if (!studentMap[l.studentId]) studentMap[l.studentId] = { name: l.studentName, amount: 0, count: 0, duration: 0 };
+    studentMap[l.studentId].amount += l.amount || 0;
+    studentMap[l.studentId].count++;
+    studentMap[l.studentId].duration += l.duration || 1;
+  });
+  const studentArr = Object.values(studentMap).sort((a, b) => b.amount - a.amount);
+  const maxAmount = Math.max(...studentArr.map(s => s.amount), 1);
+  document.getElementById('studentStats').innerHTML = studentArr.length ? studentArr.map(s => `
+    <div style="margin-bottom:12px">
+      <div class="flex-between mb-8"><span><b>${s.name}</b> · ${s.count}次 · ${s.duration}h</span><span class="text-bold">¥${s.amount}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(s.amount/maxAmount*100)}%"></div></div>
+    </div>
+  `).join('') : '<div class="empty" style="padding:20px">暂无数据</div>';
+};
+
+/* ----- 数据备份 ----- */
+Pages.backup = function() {
+  const students = DB.getStudents();
+  const lessons = DB.getLessons();
+  const dataSize = JSON.stringify(DB.data).length;
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-title">数据备份</div>
+        <div class="page-subtitle">导出/导入数据，防止丢失</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;font-size:15px;margin-bottom:12px">数据概览</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">学生数</div><div class="stat-value">${students.length}</div></div>
+        <div class="stat-card blue"><div class="stat-label">上课记录</div><div class="stat-value">${lessons.length}</div></div>
+        <div class="stat-card orange"><div class="stat-label">数据大小</div><div class="stat-value">${(dataSize/1024).toFixed(1)}<span class="stat-unit">KB</span></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px">导出数据</div>
+      <p class="muted mb-8">将所有数据导出为 JSON 文件，保存到本地。建议定期备份。</p>
+      <button class="btn btn-primary" onclick="Actions.exportData()">⬇ 导出 JSON 备份</button>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px">导入数据</div>
+      <p class="muted mb-8">从 JSON 备份文件恢复数据。<b class="text-red">注意：导入会覆盖现有数据！</b></p>
+      <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">⬆ 选择文件导入</button>
+    </div>
+    <div class="card" style="border:1px solid var(--green-light)">
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;color:var(--green-dark)">☁️ 云端同步（多设备）</div>
+      <p class="muted mb-8">配置 GitHub 仓库后，手机/电脑可共用同一份数据。数据存于仓库的 <code>data.json</code>。每台设备输入<b>相同的 Token 和仓库</b> 即可同步。</p>
+      <div class="form-group"><label class="form-label">GitHub Token</label><input class="form-input" id="gh_token" type="password" value="${GitHubSync.getToken()}" placeholder="ghp_xxxxxxxx"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">仓库拥有者</label><input class="form-input" id="gh_owner" value="${GitHubSync.getOwner()}" placeholder="如 d2284vkg2k-web"></div>
+        <div class="form-group"><label class="form-label">仓库名</label><input class="form-input" id="gh_repo" value="${GitHubSync.getRepo()}" placeholder="badminton-coach"></div>
+      </div>
+      <div class="form-hint mb-8">Token 仅保存在本设备浏览器，不上传任何第三方。</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="GitHubSync.saveConfig()">💾 保存配置</button>
+        <button class="btn btn-green" onclick="GitHubSync.upload()">⬆ 备份到云端</button>
+        <button class="btn btn-outline" onclick="GitHubSync.download()">⬇ 从云端恢复</button>
+        <button class="btn btn-outline" onclick="GitHubSync.status()">🔄 查看云端状态</button>
+      </div>
+      <div id="gh_status" class="form-hint mt-8"></div>
+    </div>
+    <div class="card" style="border:1px solid #fecaca">
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;color:var(--red)">清空数据</div>
+      <p class="muted mb-8">删除所有学生和上课记录，恢复到内置备份数据（13个学生、73条课程）。此操作不可撤销！</p>
+      <button class="btn btn-danger" onclick="Actions.resetData()">🗑 清空并重置</button>
+    </div>
+  `;
+};
+
+/* ============================================================
+   图表（Canvas 自绘）
+   ============================================================ */
+const Charts = {
+  trend(canvas, buckets) {
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = 240;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    const pad = { l: 40, r: 40, t: 20, b: 40 };
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+
+    const maxAmount = Math.max(...buckets.map(b => b.amount), 100);
+    const maxDuration = Math.max(...buckets.map(b => b.duration), 1);
+
+    // Y轴标尺
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.t + ch - (ch / 4) * i;
+      const amt = Math.round(maxAmount * i / 4);
+      ctx.fillText('¥' + amt, pad.l - 6, y + 3);
+      // 网格线
+      ctx.strokeStyle = '#f3f4f6';
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(w - pad.r, y);
+      ctx.stroke();
+    }
+
+    const barW = cw / buckets.length * 0.6;
+    const gap = cw / buckets.length;
+
+    buckets.forEach((b, i) => {
+      const x = pad.l + gap * i + (gap - barW) / 2;
+      // 柱状图 - 金额
+      const barH = (b.amount / maxAmount) * ch;
+      const y = pad.t + ch - barH;
+      const grad = ctx.createLinearGradient(0, y, 0, pad.t + ch);
+      grad.addColorStop(0, '#2d8a4e');
+      grad.addColorStop(1, '#1f6b3a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, barW, Math.max(barH, b.amount > 0 ? 2 : 0));
+
+      // 折线图 - 课时
+      const durY = pad.t + ch - (b.duration / maxDuration) * ch;
+      if (i === 0) { ctx.beginPath(); ctx.moveTo(x + barW / 2, durY); }
+      else { ctx.lineTo(x + barW / 2, durY); }
+
+      // 金额标签
+      if (b.amount > 0) {
+        ctx.fillStyle = '#374151';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('¥' + b.amount, x + barW / 2, y - 4);
+      }
+    });
+    // 画折线
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // 折线点
+    buckets.forEach((b, i) => {
+      const x = pad.l + gap * i + (gap - barW) / 2 + barW / 2;
+      const durY = pad.t + ch - (b.duration / maxDuration) * ch;
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(x, durY, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // X轴标签
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    const step = buckets.length > 8 ? 2 : 1;
+    buckets.forEach((b, i) => {
+      if (i % step === 0) {
+        ctx.fillText(b.label, pad.l + gap * i + gap / 2, h - pad.b + 16);
+      }
+    });
+
+    // 图例
+    ctx.fillStyle = '#2d8a4e';
+    ctx.fillRect(w - pad.r - 80, pad.t, 10, 10);
+    ctx.fillStyle = '#374151';
+    ctx.textAlign = 'left';
+    ctx.fillText('金额', w - pad.r - 66, pad.t + 9);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(w - pad.r - 40, pad.t, 10, 10);
+    ctx.fillStyle = '#374151';
+    ctx.fillText('课时', w - pad.r - 26, pad.t + 9);
+  }
+};
+
+/* ============================================================
+   表单
+   ============================================================ */
+const Forms = {};
+
+// 学生表单
+Forms.student = function(id) {
+  const s = id ? DB.getStudent(id) : {};
+  const isEdit = !!id;
+  openModal(isEdit ? '编辑学生' : '添加学生', `
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">姓名 <span class="req">*</span></label><input class="form-input" id="f_name" value="${s.name || ''}" placeholder="学生姓名"></div>
+      <div class="form-group"><label class="form-label">性别</label>
+        <select class="form-select" id="f_gender">
+          <option value="男" ${s.gender==='男'?'selected':''}>男</option>
+          <option value="女" ${s.gender==='女'?'selected':''}>女</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">出生日期</label><input type="date" class="form-input" id="f_birthDate" value="${s.birthDate || ''}"></div>
+      <div class="form-group"><label class="form-label">加入日期</label><input type="date" class="form-input" id="f_joinDate" value="${s.joinDate || Utils.todayStr()}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">水平</label>
+        <select class="form-select" id="f_level">
+          <option value="初级" ${s.level==='初级'?'selected':''}>初级</option>
+          <option value="中级" ${s.level==='中级'?'selected':''}>中级</option>
+          <option value="高级" ${s.level==='高级'?'selected':''}>高级</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">联系电话</label><input class="form-input" id="f_phone" value="${s.phone || ''}" placeholder="家长/本人电话"></div>
+    </div>
+    <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="f_notes" placeholder="身体素质、技术特点、注意事项等">${s.notes || ''}</textarea></div>
+  `, `
+    <button class="btn btn-outline" onclick="closeModal()">取消</button>
+    <button class="btn btn-primary" onclick="Forms.studentSave('${id || ''}')">保存</button>
+  `);
+};
+Forms.studentSave = function(id) {
+  const name = document.getElementById('f_name').value.trim();
+  if (!name) { showToast('请填写姓名'); return; }
+  const data = {
+    name,
+    gender: document.getElementById('f_gender').value,
+    birthDate: document.getElementById('f_birthDate').value,
+    joinDate: document.getElementById('f_joinDate').value,
+    level: document.getElementById('f_level').value,
+    phone: document.getElementById('f_phone').value.trim(),
+    notes: document.getElementById('f_notes').value.trim()
+  };
+  if (id) { DB.updateStudent(id, data); showToast('已更新'); }
+  else { DB.addStudent(data); showToast('已添加'); }
+  closeModal();
+  Router.render();
+};
+
+// 课时包表单
+Forms.package = function(studentId, pkgId) {
+  const isEdit = !!pkgId;
+  let pkg = {};
+  if (isEdit) {
+    const s = DB.getStudent(studentId);
+    pkg = s.packages.find(p => p.id === pkgId) || {};
+  }
+  const curType = pkg.type || DB.normalizeType(pkg.name) || '1对1';
+  openModal(isEdit ? '编辑课时包' : '购买课时包', `
+    <div class="form-group"><label class="form-label">课时包类型 <span class="req">*</span></label>
+      <div class="pkg-type-grid" id="pkgTypeGrid">
+        ${Object.entries(DB.PKG_TYPES).map(([k, v]) => `
+          <div class="pkg-type-card ${curType === k ? 'selected' : ''}" data-type="${k}" onclick="Forms.selectPkgType('${k}')">
+            <div class="pt-name">${v.label}</div>
+            <div class="pt-desc">${v.desc}</div>
+            <div class="pt-duration">${v.durationOptions.length ? '单节 ' + v.durationOptions.join('/') + ' 小时' : '自定义单节时长'}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">单节课时长（小时）<span class="req">*</span></label>
+      <div id="durationBox"></div>
+      <div class="form-hint" id="durationHint" style="font-size:12px;color:var(--gray-500);margin-top:4px"></div>
+    </div>
+    <div class="form-group"><label class="form-label">课时包名称 <span class="req">*</span></label><input class="form-input" id="p_name" value="${pkg.name || ''}" placeholder="如：1对1、8节课包"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">总课时数 <span class="req">*</span></label><input type="number" step="0.5" class="form-input" id="p_total" value="${pkg.totalLessons || 10}" min="1"></div>
+      <div class="form-group"><label class="form-label">总价（元）<span class="req">*</span></label><input type="number" class="form-input" id="p_price" value="${pkg.price || 1200}" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">购买日期</label><input type="date" class="form-input" id="p_date" value="${pkg.purchaseDate || Utils.todayStr()}"></div>
+      <div class="form-group"><label class="form-label">单价</label><input class="form-input" id="p_unit" disabled placeholder="自动计算"></div>
+    </div>
+    ${isEdit ? `<div class="form-row"><div class="form-group"><label class="form-label">已用课时</label><input type="number" step="0.5" class="form-input" id="p_used" value="${pkg.usedLessons || 0}" min="0"></div><div class="form-group"><label class="form-label">状态</label><select class="form-select" id="p_status"><option value="active" ${pkg.status==='active'?'selected':''}>进行中</option><option value="finished" ${pkg.status==='finished'?'selected':''}>已完成</option></select></div></div>` : ''}
+  `, `
+    <button class="btn btn-outline" onclick="closeModal()">取消</button>
+    <button class="btn btn-orange" onclick="Forms.packageSave('${studentId}', '${pkgId || ''}')">保存</button>
+  `);
+  // 课时类型样式
+  if (!document.getElementById('pkgTypeStyle')) {
+    const st = document.createElement('style');
+    st.id = 'pkgTypeStyle';
+    st.textContent = `
+      .pkg-type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:4px}
+      .pkg-type-card{border:2px solid var(--gray-200);border-radius:8px;padding:12px;cursor:pointer;transition:all .15s;background:#fff}
+      .pkg-type-card:hover{border-color:var(--green-light)}
+      .pkg-type-card.selected{border-color:var(--green);background:var(--green-light)}
+      .pkg-type-card .pt-name{font-weight:600;font-size:14px;margin-bottom:3px}
+      .pkg-type-card .pt-desc{font-size:11px;color:var(--gray-500)}
+      .pkg-type-card .pt-duration{font-size:12px;color:var(--green-dark);font-weight:500;margin-top:4px}
+      .form-hint{font-size:12px;color:var(--gray-500)}
+    `;
+    document.head.appendChild(st);
+  }
+  Forms.selectPkgType(curType, pkg.lessonDuration);
+  const calc = () => {
+    const total = +document.getElementById('p_total').value || 0;
+    const price = +document.getElementById('p_price').value || 0;
+    document.getElementById('p_unit').value = total > 0 ? `¥${Math.round(price/total)}/节` : '';
+  };
+  document.getElementById('p_total').addEventListener('input', calc);
+  document.getElementById('p_price').addEventListener('input', calc);
+  calc();
+};
+Forms.selectPkgType = function(type, presetDuration) {
+  document.querySelectorAll('#pkgTypeGrid .pkg-type-card').forEach(c => c.classList.toggle('selected', c.dataset.type === type));
+  const cfg = DB.PKG_TYPES[type];
+  const box = document.getElementById('durationBox');
+  const hint = document.getElementById('durationHint');
+  if (type === '自由定制') {
+    box.innerHTML = `<input type="number" min="0.5" step="0.5" class="form-input" id="p_duration" value="${presetDuration || 1}" placeholder="如 1、1.5、2"><div class="form-hint">由客户决定，填写每节课的小时数</div>`;
+    hint.textContent = '';
+  } else if (cfg.durationOptions.length === 1) {
+    box.innerHTML = `<input type="number" class="form-input" id="p_duration" value="${cfg.defaultDuration}" readonly><div class="form-hint">${cfg.label}课程固定 ${cfg.defaultDuration} 小时/节</div>`;
+    hint.textContent = '';
+  } else {
+    box.innerHTML = `<select class="form-select" id="p_duration">${cfg.durationOptions.map(d => `<option value="${d}" ${presetDuration === d ? 'selected' : ''}>${d} 小时</option>`).join('')}</select>`;
+    hint.textContent = '根据选择时长确定一节课的课时数';
+  }
+  // 自动填充名称（仅新建时且名称为空）
+  const nameInput = document.getElementById('p_name');
+  if (!nameInput.value) nameInput.value = cfg.label;
+};
+Forms.packageSave = function(studentId, pkgId) {
+  const type = document.querySelector('#pkgTypeGrid .pkg-type-card.selected').dataset.type;
+  const name = document.getElementById('p_name').value.trim();
+  const total = +document.getElementById('p_total').value;
+  const price = +document.getElementById('p_price').value;
+  const lessonDuration = parseFloat(document.getElementById('p_duration').value) || DB.PKG_TYPES[type].defaultDuration;
+  if (!name) { showToast('请填写名称'); return; }
+  if (!total || total < 1) { showToast('请填写课时数'); return; }
+  if (!price && price !== 0) { showToast('请填写价格'); return; }
+  const pkgData = { name, type, totalLessons: total, price, lessonDuration, purchaseDate: document.getElementById('p_date').value };
+  if (pkgId) {
+    // 编辑
+    const s = DB.getStudent(studentId);
+    const p = s.packages.find(x => x.id === pkgId);
+    pkgData.usedLessons = +document.getElementById('p_used').value || 0;
+    pkgData.status = document.getElementById('p_status').value;
+    Object.assign(p, pkgData);
+    DB.save();
+    showToast('课包已更新');
+  } else {
+    DB.addPackage(studentId, pkgData);
+    showToast('课时包已添加');
+  }
+  closeModal();
+  Router.render();
+};
+
+// 训练计划表单
+Forms.plan = function(studentId) {
+  openModal('添加训练计划', `
+    <div class="form-group"><label class="form-label">计划标题 <span class="req">*</span></label><input class="form-input" id="pl_title" placeholder="如：正手高远球强化"></div>
+    <div class="form-group"><label class="form-label">训练内容 <span class="req">*</span></label><textarea class="form-textarea" id="pl_content" style="min-height:140px" placeholder="训练项目、组数、时长等&#10;如：&#10;1. 原地挥拍 200次&#10;2. 多球喂送 100个&#10;3. 对抗练习 20分钟"></textarea></div>
+  `, `
+    <button class="btn btn-outline" onclick="closeModal()">取消</button>
+    <button class="btn btn-primary" onclick="Forms.planSave('${studentId}')">保存</button>
+  `);
+};
+Forms.planSave = function(studentId) {
+  const title = document.getElementById('pl_title').value.trim();
+  const content = document.getElementById('pl_content').value.trim();
+  if (!title) { showToast('请填写标题'); return; }
+  if (!content) { showToast('请填写内容'); return; }
+  DB.addPlan(studentId, { title, content });
+  showToast('计划已添加');
+  closeModal();
+  Router.render();
+};
+
+// 上课记录表单
+Forms.lesson = function(lessonId, presetStudentId) {
+  const l = lessonId ? DB.getLessons().find(x => x.id === lessonId) : null;
+  const students = DB.getStudents();
+  if (!students.length) { showToast('请先添加学生'); return; }
+  const isEdit = !!l;
+
+  const studentOptions = students.map(s => {
+    const remain = Utils.remainingLessons(s);
+    const sel = (l && l.studentId === s.id) || (!l && presetStudentId === s.id) ? 'selected' : '';
+    return `<option value="${s.id}" ${sel}>${s.name}（剩余${remain}节）</option>`;
+  }).join('');
+
+  openModal(isEdit ? '编辑上课记录' : '记录上课', `
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">学生 <span class="req">*</span></label>
+        <select class="form-select" id="l_student" onchange="Forms.lessonOnStudentChange()"><option value="">请选择</option>${studentOptions}</select>
+      </div>
+      <div class="form-group"><label class="form-label">上课日期 <span class="req">*</span></label><input type="date" class="form-input" id="l_date" value="${l ? l.date : Utils.todayStr()}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">开始时间</label><input type="time" class="form-input" id="l_start" value="${l ? l.startTime : '09:00'}" onchange="Forms.lessonCalcDuration()"></div>
+      <div class="form-group"><label class="form-label">结束时间</label><input type="time" class="form-input" id="l_end" value="${l ? l.endTime : '10:00'}" onchange="Forms.lessonCalcDuration()"></div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">课程类型</label>
+        <select class="form-select" id="l_type">
+          <option value="一对一" ${l&&l.type==='一对一'?'selected':''}>一对一</option>
+          <option value="1对2" ${l&&l.type==='1对2'?'selected':''}>1对2</option>
+          <option value="小班" ${l&&l.type==='小班'?'selected':''}>小班</option>
+          <option value="自由定制" ${l&&l.type==='自由定制'?'selected':''}>自由定制</option>
+          <option value="大班" ${l&&l.type==='大班'?'selected':''}>大班</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">时长(小时)</label><input class="form-input" id="l_duration" value="${l ? l.duration : 1}" disabled></div>
+      <div class="form-group"><label class="form-label">消耗课时</label><input class="form-input" id="l_consume" value="${l ? l.duration : 1}" disabled></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">金额（元）</label><input type="number" class="form-input" id="l_amount" value="${l ? l.amount : 0}" min="0"></div>
+      <div class="form-group"><label class="form-label">场地</label><input class="form-input" id="l_location" value="${l ? l.location || '' : ''}" placeholder="如：1号场地"></div>
+    </div>
+    <div class="form-group"><label class="form-label">扣减课时包</label>
+      <select class="form-select" id="l_package" onchange="Forms.lessonCalcAmount()"><option value="">不扣课时</option></select>
+      <div class="form-hint" id="pkgInfo" style="font-size:12px;color:var(--gray-500);margin-top:4px"></div>
+    </div>
+    <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="l_notes" placeholder="训练内容、表现等">${l ? l.notes || '' : ''}</textarea></div>
+  `, `
+    <button class="btn btn-outline" onclick="closeModal()">取消</button>
+    <button class="btn btn-primary" onclick="Forms.lessonSave('${lessonId || ''}')">保存</button>
+  `);
+
+  // 初始选中学生时加载课时包
+  if (l) {
+    Forms.lessonOnStudentChange(l.packageId);
+  } else if (presetStudentId) {
+    Forms.lessonOnStudentChange();
+  }
+};
+Forms.lessonOnStudentChange = function(currentPkgId) {
+  const sid = document.getElementById('l_student').value;
+  const pkgSel = document.getElementById('l_package');
+  if (!sid) { pkgSel.innerHTML = '<option value="">不扣课时</option>'; document.getElementById('pkgInfo').textContent = ''; return; }
+  const s = DB.getStudent(sid);
+  const allPkgs = s.packages;
+  let html = '<option value="">不扣课时</option>';
+  let firstActiveId = null;
+  allPkgs.forEach(p => {
+    const remain = p.totalLessons - p.usedLessons;
+    const unit = Math.round(p.price / p.totalLessons);
+    const pType = p.type || DB.normalizeType(p.name);
+    const disabled = p.status !== 'active' || remain <= 0 ? 'disabled' : '';
+    const sel = currentPkgId === p.id ? 'selected' : '';
+    if (!currentPkgId && !firstActiveId && p.status === 'active' && remain > 0) firstActiveId = p.id;
+    html += `<option value="${p.id}" ${disabled} ${sel}>${p.name}（${pType}·${p.lessonDuration||1}h/节·剩余${remain}·单价¥${unit}）</option>`;
+  });
+  pkgSel.innerHTML = html;
+  // 新建时自动选中第一个可用课包
+  if (!currentPkgId && firstActiveId) pkgSel.value = firstActiveId;
+  Forms.lessonCalcDuration();
+  Forms.lessonCalcAmount();
+};
+Forms.lessonCalcDuration = function() {
+  const start = document.getElementById('l_start').value;
+  const end = document.getElementById('l_end').value;
+  const dur = Utils.calcDuration(start, end);
+  document.getElementById('l_duration').value = dur;
+  // 计算消耗课时
+  const sid = document.getElementById('l_student').value;
+  const pkgId = document.getElementById('l_package').value;
+  let consume = dur;
+  if (sid && pkgId) {
+    const s = DB.getStudent(sid);
+    const pkg = s.packages.find(p => p.id === pkgId);
+    if (pkg) consume = DB.calcConsume(dur, pkg.lessonDuration);
+  }
+  document.getElementById('l_consume').value = consume;
+};
+Forms.lessonCalcAmount = function() {
+  const sid = document.getElementById('l_student').value;
+  const pkgId = document.getElementById('l_package').value;
+  const info = document.getElementById('pkgInfo');
+  if (!sid || !pkgId) { info.textContent = ''; return; }
+  const s = DB.getStudent(sid);
+  const pkg = s.packages.find(p => p.id === pkgId);
+  if (!pkg) { info.textContent = ''; return; }
+  const pType = pkg.type || DB.normalizeType(pkg.name);
+  info.innerHTML = `课时类型 <b>${pType}</b> · 单节时长 <b>${pkg.lessonDuration}h</b> · 单价 ¥${Math.round(pkg.price/pkg.totalLessons)}/课时`;
+  const dur = +document.getElementById('l_duration').value || 1;
+  const consume = DB.calcConsume(dur, pkg.lessonDuration);
+  document.getElementById('l_consume').value = consume;
+  const unit = Math.round(pkg.price / pkg.totalLessons);
+  document.getElementById('l_amount').value = Math.round(unit * consume);
+};
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'l_package') { Forms.lessonCalcDuration(); Forms.lessonCalcAmount(); }
+});
+Forms.lessonSave = function(lessonId) {
+  const sid = document.getElementById('l_student').value;
+  if (!sid) { showToast('请选择学生'); return; }
+  const s = DB.getStudent(sid);
+  const start = document.getElementById('l_start').value;
+  const end = document.getElementById('l_end').value;
+  const data = {
+    studentId: sid,
+    studentName: s.name,
+    date: document.getElementById('l_date').value,
+    startTime: start,
+    endTime: end,
+    duration: Utils.calcDuration(start, end),
+    type: document.getElementById('l_type').value,
+    packageId: document.getElementById('l_package').value || null,
+    amount: +document.getElementById('l_amount').value || 0,
+    location: document.getElementById('l_location').value.trim(),
+    notes: document.getElementById('l_notes').value.trim()
+  };
+  if (lessonId) { DB.updateLesson(lessonId, data); showToast('已更新'); }
+  else { DB.addLesson(data); showToast('上课记录已添加'); }
+  closeModal();
+  Router.render();
+};
+
+/* ============================================================
+   操作
+   ============================================================ */
+const Actions = {
+  deleteLesson(id) {
+    if (confirm('确定删除这条上课记录？删除后会回退已扣课时。')) {
+      DB.deleteLesson(id);
+      showToast('已删除');
+      Router.render();
+    }
+  },
+  deleteStudent(id) {
+    const s = DB.getStudent(id);
+    if (confirm(`确定删除学生「${s.name}」？\n该学生的所有上课记录也会被删除，此操作不可撤销。`)) {
+      DB.deleteStudent(id);
+      showToast('已删除');
+      Router.go('students');
+    }
+  },
+  deletePackage(studentId, pkgId) {
+    if (confirm('确定删除这个课时包？已扣减的课时不会恢复。')) {
+      DB.deletePackage(studentId, pkgId);
+      showToast('已删除');
+      Router.render();
+    }
+  },
+  deletePlan(studentId, planId) {
+    if (confirm('确定删除这个训练计划？')) {
+      DB.deletePlan(studentId, planId);
+      showToast('已删除');
+      Router.render();
+    }
+  },
+  exportData() {
+    const data = DB.exportData();
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `羽毛球教练数据备份_${Utils.todayStr()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('已导出');
+  },
+  importData(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        DB.importData(e.target.result);
+        showToast('导入成功');
+        Router.render();
+      } catch (err) {
+        showToast('导入失败：' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  },
+  resetData() {
+    if (confirm('确定清空所有数据并恢复到内置备份数据（13个学生、73条课程）？\n此操作不可撤销！')) {
+      localStorage.removeItem(DB.KEY);
+      DB.init();
+      showToast('已重置为备份数据');
+      Router.go('dashboard');
+    }
+  }
+};
+
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  if (e.target.files[0]) Actions.importData(e.target.files[0]);
+  e.target.value = '';
+});
+
+/* ============================================================
+   初始化
+   ============================================================ */
+DB.init();
+
+// 导航事件
+document.querySelectorAll('.nav-item').forEach(n => {
+  n.addEventListener('click', () => Router.go(n.dataset.page));
+});
+
+// 移动端菜单
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+// 渲染首页
+Router.render();
+</script>
+</body>
+</html>
