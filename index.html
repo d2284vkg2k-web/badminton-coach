@@ -1234,7 +1234,10 @@ Pages.studentDetail = function(id) {
     <div class="card">
       <div class="flex-between mb-8">
         <div style="font-weight:700;font-size:15px">训练计划</div>
-        <button class="btn btn-outline btn-sm" onclick="Forms.plan('${id}')">+ 添加计划</button>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm" onclick="Forms.plan('${id}')">+ 添加计划</button>
+          <button class="btn btn-outline btn-sm" onclick="Forms.smartPlan('${id}')">🤖 智能推荐</button>
+        </div>
       </div>
       ${planHtml}
     </div>
@@ -1698,6 +1701,93 @@ Forms.planSave = function(studentId) {
   if (!content) { showToast('请填写内容'); return; }
   DB.addPlan(studentId, { title, content });
   showToast('计划已添加');
+  closeModal();
+  Router.render();
+};
+
+// 智能训练计划推荐：依据学生水平 / 常上课类型 / 近期上课反馈备注 生成建议
+Forms.smartRecommend = function(studentId) {
+  const s = DB.getStudent(studentId);
+  if (!s) return [];
+  const lessons = DB.getLessons().filter(l => l.studentId === studentId);
+  const level = (s.level || '').toString();
+
+  const typeCount = {};
+  lessons.forEach(l => { typeCount[l.type] = (typeCount[l.type] || 0) + 1; });
+  let mainType = '', max = 0;
+  Object.keys(typeCount).forEach(t => { if (typeCount[t] > max) { max = typeCount[t]; mainType = t; } });
+
+  const notesText = lessons.slice(-15).map(l => (l.notes || '')).join(' ');
+  const kwMap = {
+    '步法': '步伐移动专项：米字步、启动步、回中步，每组 20 次 × 4 组',
+    '发力': '发力与核心：转体发力、手腕手指发力、核心力量训练',
+    '网前': '网前小球：搓球、放网、勾对角，强调手感与贴网高度',
+    '高远': '高远球稳定性：架拍、引拍轨迹、落点控制到后场底线',
+    '吊球': '吊球落点：劈吊与直线吊，结合假动作骗对手',
+    '杀球': '杀球下压：起跳时机、拍面角度、落点刁钻',
+    '发球': '发球抢攻：发后场高远压迫、发网前抢封',
+    '接杀': '防守反击：接杀挡网、挑后场、由守转攻',
+    '搓球': '网前搓球：旋转控制、贴网不冒高',
+    '体能': '体能耐力：间歇跑、绳梯、折返跑提升移动能力'
+  };
+  const kw = [];
+  Object.keys(kwMap).forEach(k => { if (notesText.indexOf(k) !== -1) kw.push(kwMap[k]); });
+
+  const recs = [];
+  let baseTitle, baseContent;
+  if (level.indexOf('初级') !== -1 || level.indexOf('入门') !== -1) {
+    baseTitle = '基础技术巩固计划';
+    baseContent = '1. 握拍与站位：规范正手握拍、准备姿势\n2. 正手高远球：架拍—引拍—击球—随挥，每组 30 次 × 3 组\n3. 基础步伐：启动步、并步、交叉步\n4. 多球定点击球：巩固手感，50 球 × 3 轮';
+  } else if (level.indexOf('高级') !== -1 || level.indexOf('进阶') !== -1) {
+    baseTitle = '高阶技战术强化计划';
+    baseContent = '1. 战术套路：拉吊结合突击、控网抢攻\n2. 假动作与前场变化：停顿、收吊、假杀\n3. 速度与对抗：多拍连续、实战对抗 30 分钟\n4. 专项体能：爆发力与移动耐力';
+  } else {
+    baseTitle = '技术组合提升计划';
+    baseContent = '1. 高吊杀组合：线路变化与衔接\n2. 全场步伐连贯：六点跑、四点跑\n3. 双打轮转与封网意识\n4. 多球实战对抗 20 分钟';
+  }
+  recs.push({ title: baseTitle, content: baseContent });
+
+  let typeTitle, typeContent;
+  if (mainType === '1对2') {
+    typeTitle = '双打配合专项';
+    typeContent = '1. 轮转站位：前封后杀、左右轮转\n2. 封网意识：网前扑压、连贯封网\n3. 中半场抽挡与平抽快挡\n4. 接发球抢攻套路';
+  } else if (mainType === '小班') {
+    typeTitle = '多人对抗与配合';
+    typeContent = '1. 多人多球轮转击球\n2. 分组对抗：落点调动与跑动覆盖\n3. 团队配合意识与沟通';
+  } else if (mainType === '自由定制') {
+    typeTitle = '个性化定制训练';
+    typeContent = '1. 针对薄弱环节一对一精雕\n2. 按比赛需求定制技战术\n3. 阶段性目标分解训练';
+  } else {
+    typeTitle = '个人技术精雕';
+    typeContent = '1. 单项技术细节打磨（架拍、发力、拍面）\n2. 动作定型与纠错\n3. 稳定性与一致性训练';
+  }
+  recs.push({ title: typeTitle, content: typeContent });
+
+  if (kw.length) {
+    recs.push({ title: '专项补强计划（依据近期上课反馈）', content: kw.join('\n') });
+  } else {
+    recs.push({ title: '体能与步法基础', content: '1. 绳梯步伐灵敏训练\n2. 折返跑与间歇跑提升移动速度\n3. 核心与下肢力量\n4. 拉伸与恢复' });
+  }
+  return recs;
+};
+Forms.smartPlan = function(studentId) {
+  const recs = Forms.smartRecommend(studentId);
+  Forms._recommend = recs;
+  const body = recs.map((r, i) => `
+    <div class="plan-item" style="margin-bottom:12px">
+      <div class="plan-item-head">
+        <div class="plan-title">${r.title}</div>
+        <button class="btn btn-primary btn-sm" onclick="Forms.smartAdopt('${studentId}', ${i})">采用</button>
+      </div>
+      <div class="plan-content mt-12">${r.content}</div>
+    </div>`).join('');
+  openModal('🤖 智能训练计划推荐', body, `<button class="btn btn-outline" onclick="closeModal()">关闭</button>`);
+};
+Forms.smartAdopt = function(studentId, i) {
+  const rec = Forms._recommend && Forms._recommend[i];
+  if (!rec) return;
+  DB.addPlan(studentId, { title: rec.title, content: rec.content });
+  showToast('已采用：' + rec.title);
   closeModal();
   Router.render();
 };
