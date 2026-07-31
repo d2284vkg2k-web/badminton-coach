@@ -160,8 +160,12 @@ tr:hover td { background: var(--gray-50); }
 .modal-title { font-size: 17px; font-weight: 700; }
 .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray-500); padding: 0 4px; line-height: 1; }
 .modal-close:hover { color: var(--gray-900); }
-.modal-body { padding: 20px; max-height: 65vh; overflow-y: auto; }
-.modal-footer { padding: 14px 20px; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 10px; }
+.modal-body { padding: 20px; max-height: 65vh; overflow-y: scroll; scrollbar-width: thin; scrollbar-color: var(--green) transparent; }
+.modal-body::-webkit-scrollbar { width: 8px; }
+.modal-body::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 4px; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--green); border-radius: 4px; }
+.modal-body::-webkit-scrollbar-thumb:hover { background: var(--green-dark); }
+.modal-footer { padding: 14px 20px; display: flex; justify-content: flex-end; gap: 10px; }
 
 /* ===== Tabs ===== */
 .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--gray-200); margin-bottom: 16px; overflow-x: auto; }
@@ -293,7 +297,7 @@ canvas.chart { width: 100% !important; height: 240px; }
 <input type="file" id="fileInput" accept=".json" style="display:none">
 
 <!-- 内置备份数据 -->
-<script src="backup-data.js"></script>
+<script src="backup-data.js"><\/script>
 <script>
 /* ============================================================
    数据层 - localStorage CRUD
@@ -601,13 +605,13 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 const GitHubSync = {
   KEY_TOKEN: 'gh_token', KEY_OWNER: 'gh_owner', KEY_REPO: 'gh_repo',
   getToken() { return localStorage.getItem(this.KEY_TOKEN) || ''; },
-  getOwner() { return localStorage.getItem(this.KEY_OWNER) || ''; },
-  getRepo()  { return localStorage.getItem(this.KEY_REPO) || ''; },
+  getOwner() { return localStorage.getItem(this.KEY_OWNER) || (document.getElementById('gh_owner') ? document.getElementById('gh_owner').value.trim() : ''); },
+  getRepo()  { return localStorage.getItem(this.KEY_REPO) || (document.getElementById('gh_repo') ? document.getElementById('gh_repo').value.trim() : ''); },
   setStatus(html) { const el = document.getElementById('gh_status'); if (el) el.innerHTML = html; },
-  // 统一 fetch，捕获网络/CORS 错误
+  // 统一 fetch（带 token，用于写操作/私有仓库），捕获网络/CORS 错误
   async api(path, opts = {}) {
     const token = this.getToken();
-    if (!token) { this.setStatus('<span style="color:#dc2626">⚠️ 尚未配置 Token，请先保存配置</span>'); return null; }
+    if (!token) { this.setStatus('<span style="color:#dc2626">⚠️ 尚未配置 Token，请先保存配置（备份到云端需要 Token）</span>'); return null; }
     opts.headers = Object.assign({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }, opts.headers || {});
     if (opts.body) opts.headers['Content-Type'] = 'application/json';
     try {
@@ -616,6 +620,16 @@ const GitHubSync = {
       this.setStatus('<span style="color:#dc2626">⚠️ 无法连接 GitHub：' + (e.message || '网络/CORS/代理拦截了 api.github.com') + '。请检查网络（如公司 WiFi 是否拦截）或换网络重试。</span>');
       return null;
     }
+  },
+  // 读取公开仓库的 data.json（无需 token，不限速率，跨域友好；main/master 自动回退）
+  async rawRead(owner, repo) {
+    for (const branch of ['main', 'master']) {
+      try {
+        const r = await fetch('https://raw.githubusercontent.com/' + owner + '/' + repo + '/' + branch + '/data.json');
+        if (r.ok) return await r.text();
+      } catch (e) {}
+    }
+    return null;
   },
   // 解析 GitHub 错误响应，给出可读原因
   async parseErr(res) {
@@ -670,36 +684,54 @@ const GitHubSync = {
     if (res.ok) { showToast('已备份到云端 ☁️'); this.status(); }
     else { const err = await this.parseErr(res); showToast('备份失败', true); this.setStatus('<span style="color:#dc2626">❌ 备份失败：' + err + '</span>'); }
   },
-  // 从云端恢复
+  // 从云端恢复（公开仓库无需 token 即可读取；私有仓库需 token）
   async download() {
     const owner = this.getOwner(), repo = this.getRepo();
-    if (!owner || !repo) { showToast('请先保存云端配置', true); return; }
-    const res = await this.api('/repos/' + owner + '/' + repo + '/contents/data.json');
-    if (!res) return;
-    if (!res.ok) { const err = await this.parseErr(res); showToast('恢复失败', true); this.setStatus('<span style="color:#dc2626">❌ 恢复失败：' + err + '</span>'); return; }
-    const d = await res.json();
+    if (!owner || !repo) { showToast('请先填写 拥有者 / 仓库名', true); return; }
+    const path = '/repos/' + owner + '/' + repo + '/contents/data.json';
+    let text = null, via = '';
+    // 1) 鉴权通道（私有仓库 / 获取最新数据）
+    if (this.getToken()) {
+      const res = await this.api(path);
+      if (res && res.ok) {
+        try { text = decodeURIComponent(escape(atob((await res.json()).content.replace(/\s/g, '')))); via = '鉴权通道'; } catch (e) { text = null; }
+      }
+    }
+    // 2) 公开通道（无需 token，不限速率；适用于公开仓库，任何设备都能读取）
+    if (!text) {
+      text = await this.rawRead(owner, repo);
+      if (text) via = '公开通道';
+    }
+    if (!text) {
+      showToast('恢复失败', true);
+      this.setStatus('<span style="color:#dc2626">❌ 恢复失败：无法读取云端数据。私有仓库请先「保存配置」填入 Token；公开仓库请确认仓库名正确，或先在某台设备点「备份到云端」。</span>');
+      return;
+    }
     try {
-      const text = decodeURIComponent(escape(atob(d.content.replace(/\s/g, ''))));
       const data = JSON.parse(text);
       if (!data.students || !data.lessons) throw new Error('数据格式不正确');
       DB.data = data; DB.migrate(); DB.save();
       showToast('已从云端恢复 ✅');
-      this.setStatus('✅ 已从云端恢复（' + data.students.length + ' 学生 / ' + data.lessons.length + ' 课程）');
+      this.setStatus('✅ 已从云端恢复（' + data.students.length + ' 学生 / ' + data.lessons.length + ' 课程）· ' + via);
       Router.go('dashboard');
     } catch (e) { showToast('恢复失败', true); this.setStatus('<span style="color:#dc2626">❌ 解析失败：' + e.message + '</span>'); }
   },
-  // 查看云端状态
+  // 查看云端状态（优先鉴权，退回公开通道）
   async status() {
     const owner = this.getOwner(), repo = this.getRepo();
     if (!owner || !repo) { this.setStatus('尚未配置云端同步'); return; }
-    const res = await this.api('/repos/' + owner + '/' + repo + '/contents/data.json');
-    if (!res) return;
-    if (res.ok) {
-      const d = await res.json();
-      this.setStatus('☁️ 云端数据已存在 · 更新于 <b>' + new Date(d.commit.author.date).toLocaleString('zh-CN') + '</b> · 大小 ' + (d.size / 1024).toFixed(1) + 'KB');
-    } else {
-      this.setStatus('☁️ 云端暂无 data.json，点「备份到云端」上传第一份数据');
+    const path = '/repos/' + owner + '/' + repo + '/contents/data.json';
+    if (this.getToken()) {
+      const res = await this.api(path);
+      if (res && res.ok) {
+        const d = await res.json();
+        this.setStatus('☁️ 云端数据已存在 · 更新于 <b>' + new Date(d.commit.author.date).toLocaleString('zh-CN') + '</b> · 大小 ' + (d.size / 1024).toFixed(1) + 'KB');
+        return;
+      }
     }
+    const raw = await this.rawRead(owner, repo);
+    if (raw) { this.setStatus('☁️ 云端数据已存在（公开通道，无需 Token）'); return; }
+    this.setStatus('☁️ 云端暂无 data.json，点「备份到云端」上传第一份数据');
   }
 };
 
@@ -749,6 +781,8 @@ Pages.dashboard = function() {
   const weekDuration = weekLessons.reduce((s, l) => s + (l.duration || 1), 0);
   const monthDuration = monthLessons.reduce((s, l) => s + (l.duration || 1), 0);
   const monthAmount = monthLessons.reduce((s, l) => s + (l.amount || 0), 0);
+  const monthCourt = monthLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
+  const monthNet = monthAmount - monthCourt;
   const students = DB.getStudents();
   const lowRemain = students.filter(s => {
     const r = Utils.remainingLessons(s);
@@ -807,6 +841,27 @@ Pages.dashboard = function() {
       <div class="stat-card red">
         <div class="stat-label">本月收入</div>
         <div class="stat-value">¥${monthAmount}</div>
+      </div>
+    </div>
+
+    <div class="card" style="border:1px solid var(--orange-light); background:linear-gradient(135deg,#fffdf5,#ffffff)">
+      <div class="flex-between mb-10">
+        <div style="font-weight:700;font-size:15px;color:var(--orange)">💰 本月财务汇总</div>
+        <span class="muted" style="font-size:12px">消课收入 − 场地费 = 净收入</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:110px">
+          <div class="muted" style="font-size:12px;margin-bottom:2px">总消课收入</div>
+          <div style="font-size:22px;font-weight:700;color:var(--gray-900)">¥${monthAmount}</div>
+        </div>
+        <div style="flex:1;min-width:110px">
+          <div class="muted" style="font-size:12px;margin-bottom:2px">总场地费成本</div>
+          <div style="font-size:22px;font-weight:700;color:var(--red)">¥${monthCourt}</div>
+        </div>
+        <div style="flex:1;min-width:110px">
+          <div class="muted" style="font-size:12px;margin-bottom:2px">净收入</div>
+          <div style="font-size:22px;font-weight:700;color:${monthNet>=0?'var(--green)':'var(--red)'}">¥${monthNet}</div>
+        </div>
       </div>
     </div>
 
@@ -1208,11 +1263,11 @@ Pages.backup = function() {
     </div>
     <div class="card" style="border:1px solid var(--green-light)">
       <div style="font-weight:700;font-size:15px;margin-bottom:8px;color:var(--green-dark)">☁️ 云端同步（多设备）</div>
-      <p class="muted mb-8">配置 GitHub 仓库后，手机/电脑可共用同一份数据。数据存于仓库的 <code>data.json</code>。每台设备输入<b>相同的 Token 和仓库</b> 即可同步。</p>
-      <div class="form-group"><label class="form-label">GitHub Token</label><input class="form-input" id="gh_token" type="password" value="${GitHubSync.getToken()}" placeholder="ghp_xxxxxxxx"></div>
+      <p class="muted mb-8">手机/电脑共用同一份云端数据。仓库已设为公开，因此<b>「从云端恢复」任何设备无需配置 Token 即可读取</b>；只有<b>「备份到云端」（写入）需要填入 Token</b>。仓库名已预填，新设备打开直接点「从云端恢复」即可。</p>
+      <div class="form-group"><label class="form-label">GitHub Token</label><input class="form-input" id="gh_token" type="password" value="${GitHubSync.getToken()}" placeholder="ghp_xxxxxxxx（备份云端需要；仅本机保存）"></div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">仓库拥有者</label><input class="form-input" id="gh_owner" value="${GitHubSync.getOwner()}" placeholder="如 d2284vkg2k-web"></div>
-        <div class="form-group"><label class="form-label">仓库名</label><input class="form-input" id="gh_repo" value="${GitHubSync.getRepo()}" placeholder="badminton-coach"></div>
+        <div class="form-group"><label class="form-label">仓库拥有者</label><input class="form-input" id="gh_owner" value="${GitHubSync.getOwner() || 'd2284vkg2k-web'}" placeholder="d2284vkg2k-web"></div>
+        <div class="form-group"><label class="form-label">仓库名</label><input class="form-input" id="gh_repo" value="${GitHubSync.getRepo() || 'badminton-coach'}" placeholder="badminton-coach"></div>
       </div>
       <div class="form-hint mb-8">Token 仅保存在本设备浏览器，不上传任何第三方。</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1779,6 +1834,6 @@ document.getElementById('menuToggle').addEventListener('click', () => {
 
 // 渲染首页
 Router.render();
-</script>
+<\/script>
 </body>
 </html>
