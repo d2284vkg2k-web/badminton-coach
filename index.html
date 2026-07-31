@@ -215,6 +215,11 @@ canvas.chart { width: 100% !important; height: 240px; }
 .plan-title { font-weight: 600; font-size: 14px; }
 .plan-date { font-size: 11px; color: var(--gray-500); }
 .plan-content { font-size: 13px; color: var(--gray-600); white-space: pre-wrap; line-height: 1.6; }
+.plan-item-weak { border-left: 3px solid var(--orange); background: #fffdf7; }
+.plan-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.plan-tip { font-size: 12px; color: var(--gray-500); background: var(--gray-50); border: 1px solid var(--gray-100); border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; }
+.btn-ghost { background: var(--gray-50); color: var(--gray-700); border: 1px solid var(--gray-200); }
+.btn-ghost:hover { background: var(--gray-100); }
 
 /* ===== Package item ===== */
 .pkg-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 10px; }
@@ -334,9 +339,22 @@ canvas.chart { width: 100% !important; height: 240px; }
 .cal-cell-lesson:hover { background: #d7efde; }
 .cal-cell-more { font-size: 11px; color: var(--gray-500); padding-left: 5px; }
 @media (max-width: 768px) {
-  .cal-cell { min-height: 58px; padding: 3px 4px; }
+  .cal-grid { gap: 4px; }
+  .cal-cell { min-height: 62px; padding: 3px 4px; }
+  .cal-cell-num { font-size: 12px; }
   .cal-cell-lesson { font-size: 10px; padding: 1px 3px; }
   .cal-weekcell { font-size: 11px; }
+  #lessonSearch { width: 100%; }
+  .filter-bar { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .cal-grid { gap: 3px; }
+  .cal-cell { min-height: 54px; padding: 2px 3px; }
+  .cal-cell-num { font-size: 11px; margin-bottom: 2px; }
+  .cal-cell-lesson { font-size: 9px; padding: 0 2px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-cell-lesson .cal-cn { display: none; }
+  .cal-weekcell { font-size: 10px; }
+  .cal-month-title { font-size: 15px; }
 }
 </style>
 </head>
@@ -1051,7 +1069,7 @@ Pages.lessonsRender = function() {
     if (isToday) cls.push('today');
     if (dayLs.length) cls.push('has-lesson');
     if (isOther) cls.push('other-month');
-    const lessonsHtml = dayLs.slice(0, 3).map(l => '<div class="cal-cell-lesson" onclick="event.stopPropagation();Forms.lesson(\'' + l.id + '\')" title="' + l.studentName + ' ' + l.startTime + '-' + l.endTime + ' · ' + l.type + '">' + l.startTime + ' ' + l.studentName + '</div>').join('') + (dayLs.length > 3 ? '<div class="cal-cell-more">+' + (dayLs.length - 3) + ' 节</div>' : '');
+    const lessonsHtml = dayLs.slice(0, 3).map(l => '<div class="cal-cell-lesson" onclick="event.stopPropagation();Forms.lesson(\'' + l.id + '\')" title="' + l.studentName + ' ' + l.startTime + '-' + l.endTime + ' · ' + l.type + '">' + l.startTime + ' <span class="cal-cn">' + l.studentName + '</span></div>').join('') + (dayLs.length > 3 ? '<div class="cal-cell-more">+' + (dayLs.length - 3) + ' 节</div>' : '');
     cells += '<div class="' + cls.join(' ') + '" onclick="Pages.lessonsPickDate(\'' + dateStr + '\')"><div class="cal-cell-num">' + d + '</div>' + lessonsHtml + '</div>';
   }
 
@@ -1730,8 +1748,14 @@ Forms.smartRecommend = function(studentId) {
     '搓球': '网前搓球：旋转控制、贴网不冒高',
     '体能': '体能耐力：间歇跑、绳梯、折返跑提升移动能力'
   };
-  const kw = [];
-  Object.keys(kwMap).forEach(k => { if (notesText.indexOf(k) !== -1) kw.push(kwMap[k]); });
+  // 统计近期反馈关键词出现频次，按频次从高到低排序弱项
+  const kwCount = {};
+  Object.keys(kwMap).forEach(k => {
+    const c = (notesText.match(new RegExp(k, 'g')) || []).length;
+    if (c) kwCount[k] = c;
+  });
+  const kw = Object.keys(kwCount).sort((a, b) => kwCount[b] - kwCount[a])
+    .map(k => '【近期提到 ' + kwCount[k] + ' 次】' + kwMap[k]);
 
   const recs = [];
   let baseTitle, baseContent;
@@ -1745,7 +1769,7 @@ Forms.smartRecommend = function(studentId) {
     baseTitle = '技术组合提升计划';
     baseContent = '1. 高吊杀组合：线路变化与衔接\n2. 全场步伐连贯：六点跑、四点跑\n3. 双打轮转与封网意识\n4. 多球实战对抗 20 分钟';
   }
-  recs.push({ title: baseTitle, content: baseContent });
+  recs.push({ title: baseTitle, content: baseContent, weak: false });
 
   let typeTitle, typeContent;
   if (mainType === '1对2') {
@@ -1761,27 +1785,57 @@ Forms.smartRecommend = function(studentId) {
     typeTitle = '个人技术精雕';
     typeContent = '1. 单项技术细节打磨（架拍、发力、拍面）\n2. 动作定型与纠错\n3. 稳定性与一致性训练';
   }
-  recs.push({ title: typeTitle, content: typeContent });
+  recs.push({ title: typeTitle, content: typeContent, weak: false });
 
+  // 弱项专项：依据近期上课反馈，按频次排序，置顶优先
   if (kw.length) {
-    recs.push({ title: '专项补强计划（依据近期上课反馈）', content: kw.join('\n') });
+    recs.unshift({ title: '专项补强计划（依据近期上课反馈 · 弱项优先）', content: kw.join('\n'), weak: true });
   } else {
-    recs.push({ title: '体能与步法基础', content: '1. 绳梯步伐灵敏训练\n2. 折返跑与间歇跑提升移动速度\n3. 核心与下肢力量\n4. 拉伸与恢复' });
+    recs.push({ title: '体能与步法基础', content: '1. 绳梯步伐灵敏训练\n2. 折返跑与间歇跑提升移动速度\n3. 核心与下肢力量\n4. 拉伸与恢复', weak: false });
   }
   return recs;
+};
+Forms.copyText = function(text, btn) {
+  const done = () => {
+    if (btn) { const t = btn.textContent; btn.textContent = '✓ 已复制'; setTimeout(() => btn.textContent = t, 1200); }
+    else showToast('已复制到剪贴板');
+  };
+  const fail = () => showToast('复制失败，请手动选择文本');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => Forms._fallbackCopy(text, done, fail));
+  } else {
+    Forms._fallbackCopy(text, done, fail);
+  }
+};
+Forms._fallbackCopy = function(text, done, fail) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) done(); else fail();
+  } catch (e) { fail(); }
 };
 Forms.smartPlan = function(studentId) {
   const recs = Forms.smartRecommend(studentId);
   Forms._recommend = recs;
+  Forms._recommendAll = recs.map(r => '【' + r.title + '】\n' + r.content).join('\n\n');
   const body = recs.map((r, i) => `
-    <div class="plan-item" style="margin-bottom:12px">
+    <div class="plan-item${r.weak ? ' plan-item-weak' : ''}" style="margin-bottom:14px">
       <div class="plan-item-head">
         <div class="plan-title">${r.title}</div>
-        <button class="btn btn-primary btn-sm" onclick="Forms.smartAdopt('${studentId}', ${i})">采用</button>
+        <div class="plan-actions">
+          <button class="btn btn-ghost btn-sm" onclick="Forms.copyText(Forms._recommend[${i}].content, this)">📋 复制</button>
+          <button class="btn btn-primary btn-sm" onclick="Forms.smartAdopt('${studentId}', ${i})">采用</button>
+        </div>
       </div>
       <div class="plan-content mt-12">${r.content}</div>
     </div>`).join('');
-  openModal('🤖 智能训练计划推荐', body, `<button class="btn btn-outline" onclick="closeModal()">关闭</button>`);
+  const tip = '<div class="plan-tip">共 ' + recs.length + ' 项，已按近期弱项排序。可逐项「复制」训练动作清单，或一键「采用」写入计划。</div>';
+  openModal('🤖 智能训练计划推荐', tip + body,
+    `<button class="btn btn-outline" onclick="Forms.copyText(Forms._recommendAll, this)">📋 复制全部</button>
+     <button class="btn btn-outline" onclick="closeModal()">关闭</button>`);
 };
 Forms.smartAdopt = function(studentId, i) {
   const rec = Forms._recommend && Forms._recommend[i];
