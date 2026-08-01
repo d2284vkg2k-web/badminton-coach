@@ -82,6 +82,7 @@ body {
 .stat-card.orange { border-left-color: var(--orange); }
 .stat-card.blue { border-left-color: var(--blue); }
 .stat-card.red { border-left-color: var(--red); }
+.stat-card.purple { border-left-color: #7c3aed; }
 .stat-label { font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
 .stat-value { font-size: 28px; font-weight: 700; color: var(--gray-900); }
 .stat-unit { font-size: 13px; font-weight: 400; color: var(--gray-500); margin-left: 4px; }
@@ -686,6 +687,15 @@ const Utils = {
   totalLessons(student) {
     if (!student.packages || !student.packages.length) return 0;
     return student.packages.reduce((sum, p) => sum + p.totalLessons, 0);
+  },
+  pendingAmount(student) {
+    if (!student.packages || !student.packages.length) return 0;
+    return Math.round(student.packages.reduce((sum, p) => {
+      const remain = Math.max(0, (p.totalLessons || 0) - (p.usedLessons || 0));
+      if (remain <= 0 || !p.price) return sum;
+      const unit = p.price / (p.totalLessons || 1);
+      return sum + unit * remain;
+    }, 0));
   }
 };
 
@@ -917,6 +927,7 @@ Pages.dashboard = function() {
   const monthCourt = finLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
   const monthNet = monthAmount - monthCourt;
   const students = DB.getStudents();
+  const pendingTotal = students.reduce((s, st) => s + Utils.pendingAmount(st), 0);
   const lowRemain = students.filter(s => {
     const r = Utils.remainingLessons(s);
     return r > 0 && r <= 2;
@@ -1005,6 +1016,10 @@ Pages.dashboard = function() {
       <div class="stat-card red">
         <div class="stat-label">本月收入</div>
         <div class="stat-value">¥${monthAmount}</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">待消课金额</div>
+        <div class="stat-value">¥${pendingTotal}</div>
       </div>
     </div>
 
@@ -1220,6 +1235,7 @@ Pages.studentsRender = function() {
         <div class="remaining-info">
           <span>已用 ${used} / ${total} 节</span>
           <span class="${remaining <= 2 ? 'text-orange text-bold' : ''}">剩余 ${remaining} 节</span>
+          <span>待消课 ¥${Utils.pendingAmount(s)}</span>
         </div>`}
     </div>`;
   }).join('');
@@ -1238,6 +1254,7 @@ Pages.studentDetail = function(id) {
   const pkgHtml = (s.packages && s.packages.length) ? s.packages.map(p => {
     const remaining = p.totalLessons - p.usedLessons;
     const unitPrice = Math.round(p.price / p.totalLessons);
+    const pendingPkg = Math.round((p.price / (p.totalLessons || 1)) * remaining);
     const pct = Math.round((p.usedLessons / p.totalLessons) * 100);
     const cls = remaining <= 2 ? 'danger' : remaining <= 4 ? 'warn' : '';
     const pType = p.type || DB.normalizeType(p.name);
@@ -1247,7 +1264,7 @@ Pages.studentDetail = function(id) {
         <div class="pkg-name">${p.name} <span class="badge ${pTypeBadge}">${pType}</span> <span class="badge badge-gray">${p.lessonDuration || 1}h/节</span> ${p.status === 'finished' ? '<span class="badge badge-gray">已完成</span>' : '<span class="badge badge-green">进行中</span>'}</div>
         <div class="pkg-meta">购买日 ${Utils.formatDateFull(p.purchaseDate)} · 单价 ¥${unitPrice} · 总价 ¥${p.price}</div>
         <div class="progress-bar mt-12"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
-        <div class="remaining-info"><span>已用 ${p.usedLessons} / ${p.totalLessons}</span><span class="${remaining <= 2 ? 'text-orange text-bold' : ''}">剩余 ${remaining}</span></div>
+        <div class="remaining-info"><span>已用 ${p.usedLessons} / ${p.totalLessons}</span><span class="${remaining <= 2 ? 'text-orange text-bold' : ''}">剩余 ${remaining}</span><span>待消课 ¥${pendingPkg}</span></div>
       </div>
       <div class="flex gap-8">
         <button class="btn btn-outline btn-sm" onclick="Forms.package('${id}','${p.id}')">编辑</button>
@@ -1332,6 +1349,7 @@ Pages.studentDetail = function(id) {
         <div class="stat-card orange"><div class="stat-label">总消课金额</div><div class="stat-value">¥${totalAmount}</div></div>
         <div class="stat-card blue"><div class="stat-label">上课次数</div><div class="stat-value">${lessons.length}<span class="stat-unit">次</span></div></div>
         <div class="stat-card ${Utils.remainingLessons(s) <= 2 ? 'red' : ''}"><div class="stat-label">剩余课时</div><div class="stat-value">${Utils.remainingLessons(s)}<span class="stat-unit">节</span></div></div>
+        <div class="stat-card purple"><div class="stat-label">待消课金额</div><div class="stat-value">¥${Utils.pendingAmount(s)}</div></div>
       </div>
     </div>
 
