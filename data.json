@@ -497,7 +497,19 @@
       "phone": "",
       "notes": "",
       "id": "ms8o5zqb68k4mh",
-      "packages": [],
+      "packages": [
+        {
+          "name": "1对1",
+          "type": "1对2",
+          "totalLessons": 26,
+          "price": 4999,
+          "lessonDuration": 1.5,
+          "purchaseDate": "2026-08-01",
+          "id": "ms9svxv4s9wjva",
+          "usedLessons": 1,
+          "status": "active"
+        }
+      ],
       "trainingPlans": [],
       "createdAt": 1785485835299
     },
@@ -510,7 +522,19 @@
       "phone": "",
       "notes": "",
       "id": "ms8o66zuy3mvje",
-      "packages": [],
+      "packages": [
+        {
+          "name": "1对1",
+          "type": "1对2",
+          "totalLessons": 26,
+          "price": 4999,
+          "lessonDuration": 1.5,
+          "purchaseDate": "2026-08-01",
+          "id": "ms9swaocmoh9zh",
+          "usedLessons": 1,
+          "status": "active"
+        }
+      ],
       "trainingPlans": [],
       "createdAt": 1785485844714
     },
@@ -601,19 +625,6 @@
       ],
       "trainingPlans": [],
       "createdAt": 1785552170791
-    },
-    {
-      "name": "程乐",
-      "gender": "男",
-      "birthDate": "",
-      "joinDate": "2026-05-10",
-      "level": "初级",
-      "phone": "",
-      "notes": "",
-      "id": "ms9rt9ucdokz6m",
-      "packages": [],
-      "trainingPlans": [],
-      "createdAt": 1785552426516
     },
     {
       "name": "君君",
@@ -3237,6 +3248,38 @@
       "notes": "",
       "id": "ms9sdob6z3myfz",
       "createdAt": 1785553378386
+    },
+    {
+      "studentId": "ms8o5zqb68k4mh",
+      "studentName": "闵悦书",
+      "date": "2026-08-02",
+      "startTime": "17:30",
+      "endTime": "19:00",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "ms9svxv4s9wjva",
+      "amount": 192,
+      "location": "",
+      "courtCost": 45,
+      "notes": "",
+      "id": "ms9sx9mwtq1ud0",
+      "createdAt": 1785554292488
+    },
+    {
+      "studentId": "ms8o66zuy3mvje",
+      "studentName": "闵思睿",
+      "date": "2026-08-02",
+      "startTime": "17:30",
+      "endTime": "19:00",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "ms9swaocmoh9zh",
+      "amount": 192,
+      "location": "",
+      "courtCost": 45,
+      "notes": "",
+      "id": "ms9sy8za03z28h",
+      "createdAt": 1785554338294
     }
   ],
   "meta": {
