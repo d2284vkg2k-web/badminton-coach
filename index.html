@@ -2010,8 +2010,8 @@ Forms.lesson = function(lessonId, presetStudentId, presetDate) {
       <div class="form-group"><label class="form-label">场地费成本（元）</label><input type="number" class="form-input" id="l_court" value="${l && l.courtCost != null ? l.courtCost : ''}" min="0" placeholder="如：60"></div>
     </div>
     <div class="form-group"><label class="form-label">场地</label><input class="form-input" id="l_location" value="${l ? l.location || '' : ''}" placeholder="如：1号场地"></div>
-    <div class="form-group"><label class="form-label">扣减课时包 <span style="font-weight:400;color:var(--gray-500)">（按课程类型自动匹配，可手动改）</span></label>
-      <select class="form-select" id="l_package" onchange="Forms.lessonCalcAmount()"><option value="">不扣课时</option></select>
+    <div class="form-group"><label class="form-label">扣减课时包 <span style="font-weight:400;color:var(--gray-500)">（选课包会自动带出课程类型，改类型也会自动匹配同类型课包）</span></label>
+      <select class="form-select" id="l_package" onchange="Forms.lessonOnPackageChange()"><option value="">不扣课时</option></select>
       <div class="form-hint" id="pkgInfo" style="font-size:12px;color:var(--gray-500);margin-top:4px"></div>
     </div>
     <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="l_notes" placeholder="训练内容、表现等">${l ? l.notes || '' : ''}</textarea></div>
@@ -2116,6 +2116,15 @@ Forms.lessonOnStudentChange = function(currentPkgId) {
   if (!currentPkgId) {
     if (firstTypeMatchId) pkgSel.value = firstTypeMatchId;
     else if (firstActiveId) pkgSel.value = firstActiveId;
+    // 新增排课：根据自动选中的扣课包带出课程类型
+    if (pkgSel.value) {
+      const sp = s.packages.find(p => p.id === pkgSel.value);
+      if (sp) {
+        const pType = sp.type || DB.normalizeType(sp.name);
+        const typeSel = document.getElementById('l_type');
+        if (typeSel && [...typeSel.options].some(o => o.value === pType)) typeSel.value = pType;
+      }
+    }
   }
   Forms.lessonCalcDuration();
   Forms.lessonCalcAmount();
@@ -2135,6 +2144,22 @@ Forms.lessonOnTypeChange = function() {
   }
   const match = s.packages.find(p => p.status === 'active' && (p.totalLessons - p.usedLessons) > 0 && (p.type || DB.normalizeType(p.name)) === type);
   if (match) pkgSel.value = match.id;
+  Forms.lessonCalcDuration();
+  Forms.lessonCalcAmount();
+};
+// 选择扣课包时，自动把课程类型带出为该课包的类型（与上面类型→课包互相对应）
+Forms.lessonOnPackageChange = function() {
+  const sid = document.getElementById('l_student').value;
+  const pkgId = document.getElementById('l_package').value;
+  const typeSel = document.getElementById('l_type');
+  if (sid && pkgId && typeSel) {
+    const s = DB.getStudent(sid);
+    const pkg = s.packages.find(p => p.id === pkgId);
+    if (pkg) {
+      const pType = pkg.type || DB.normalizeType(pkg.name);
+      if ([...typeSel.options].some(o => o.value === pType)) typeSel.value = pType;
+    }
+  }
   Forms.lessonCalcDuration();
   Forms.lessonCalcAmount();
 };
