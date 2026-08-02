@@ -638,14 +638,16 @@ const Utils = {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   },
   effectiveDuration(lessons) {
-    // 班课/一对二等群体课：同一时间多人同上课，教练时长只算一次（不重复计），
-    // 消课金额与课时仍按每人各算。一对一、自由定制按各自课时累加。
-    const groupTypes = { '1对2': 1, '小班': 1, '大班': 1, '班课': 1 };
+    // 群体课（一对二/小班/大班/班课/自由定制·私人订制等）：同一时间多人同上课，
+    // 教练时长只算一次（不重复计），消课金额与课时仍按每人各算。一对一按各自课时累加。
+    // 仅对 2026-08-01 及之后的课程记录应用去重；更早已记录的课程保持原样，不回溯处理。
+    const groupTypes = { '1对2': 1, '小班': 1, '大班': 1, '班课': 1, '自由定制': 1, '私人订制': 1 };
+    const DEDUP_FROM = '2026-08-01';
     const seen = {};
     let total = 0;
     (lessons || []).forEach(l => {
       const dur = l.duration || 1;
-      if (groupTypes[l.type]) {
+      if (groupTypes[l.type] && l.date >= DEDUP_FROM) {
         const key = l.date + '|' + l.startTime + '|' + l.endTime + '|' + l.type;
         if (seen[key]) return;
         seen[key] = true;
