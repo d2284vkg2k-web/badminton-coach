@@ -235,7 +235,7 @@
           "price": 6498,
           "purchaseDate": "2026-07-04",
           "id": "ms7ljj5cbg6e1u",
-          "usedLessons": 6.5,
+          "usedLessons": 7.5,
           "status": "active",
           "lessonDuration": 1
         }
@@ -3552,6 +3552,22 @@
       "notes": "",
       "id": "msaepr8a2ta82j",
       "createdAt": 1785590893594
+    },
+    {
+      "studentId": "ms7lj4svlf8uyx",
+      "studentName": "灿灿",
+      "date": "2026-08-02",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "ms7ljj5cbg6e1u",
+      "amount": 260,
+      "location": "",
+      "courtCost": 60,
+      "notes": "",
+      "id": "msb7fz8swtc6wo",
+      "createdAt": 1785639146284
     }
   ],
   "meta": {
