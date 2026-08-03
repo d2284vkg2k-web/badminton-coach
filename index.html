@@ -608,6 +608,7 @@ const DB = {
    ============================================================ */
 const Utils = {
   todayStr() { return new Date().toISOString().slice(0, 10); },
+  tomorrowStr() { return new Date(Date.now() + 86400000).toISOString().slice(0, 10); },
   formatDate(d) {
     if (!d) return '-';
     const dt = new Date(d);
@@ -965,33 +966,42 @@ Pages.dashboard = function() {
       <td class="text-bold">¥${l.amount}</td>
     </tr>`).join('')}</tbody></table></div>` : '<div class="empty"><div class="empty-icon">📝</div>暂无上课记录</div>';
 
-  // 今日上课时间（突出展示）
-  const todaySorted = [...todayLessons].sort((a, b) => a.startTime.localeCompare(b.startTime));
-  const todayDuration = Utils.effectiveDuration(todayLessons);
-  const todayAmount = todayLessons.reduce((s, l) => s + (l.amount || 0), 0);
-  const todayCourt = todayLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
-  const todayNet = todayAmount - todayCourt;
-  const todayCardHtml = `<div class="today-card">
+  // 今日/明日 上课时间（可切换）
+  if (!Pages._dashDay) Pages._dashDay = 'today';
+  const isTomorrow = Pages._dashDay === 'tomorrow';
+  const dayStr = isTomorrow ? Utils.tomorrowStr() : today;
+  const dayLessons = lessons.filter(l => l.date === dayStr);
+  const daySorted = [...dayLessons].sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+  const dayDuration = Utils.effectiveDuration(dayLessons);
+  const dayAmount = dayLessons.reduce((s, l) => s + (l.amount || 0), 0);
+  const dayCourt = dayLessons.reduce((s, l) => s + (l.courtCost || 0), 0);
+  const dayNet = dayAmount - dayCourt;
+  const dayDateLabel = (isTomorrow ? new Date(Date.now() + 86400000) : new Date()).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
+  const dayCardHtml = `<div class="today-card">
     <div class="today-card-head">
-      <div class="today-card-title">⏰ 今日上课时间 <span class="badge badge-orange">${todaySorted.length} 节</span></div>
+      <div class="today-card-title">⏰ ${isTomorrow ? '明日' : '今日'}上课时间 <span class="badge badge-orange">${daySorted.length} 节</span></div>
       <div class="flex gap-8" style="align-items:center">
-        <span class="muted" style="font-size:12px">${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}</span>
-        <button class="btn btn-outline btn-sm" onclick="Router.go('lessons','today')">查看全部</button>
+        <div class="fin-toggle">
+          <button class="btn btn-sm ${!isTomorrow ? 'btn-orange' : 'btn-outline'}" onclick="Pages.dashDay('today')">今日</button>
+          <button class="btn btn-sm ${isTomorrow ? 'btn-orange' : 'btn-outline'}" onclick="Pages.dashDay('tomorrow')">明日</button>
+        </div>
+        <span class="muted" style="font-size:12px">${dayDateLabel}</span>
+        <button class="btn btn-outline btn-sm" onclick="Router.go('lessons')">查看全部</button>
       </div>
     </div>
     <div class="today-summary">
-      <div class="today-stat"><div class="today-stat-label">今日上课时长</div><div class="today-stat-value">${todayDuration}<span>h</span></div></div>
-      <div class="today-stat"><div class="today-stat-label">今日消课金额</div><div class="today-stat-value">¥${todayAmount}</div></div>
-      <div class="today-stat"><div class="today-stat-label">今日净收入</div><div class="today-stat-value" style="color:${todayNet>=0?'var(--green)':'var(--red)'}">¥${todayNet}</div></div>
+      <div class="today-stat"><div class="today-stat-label">${isTomorrow ? '明日' : '今日'}上课时长</div><div class="today-stat-value">${dayDuration}<span>h</span></div></div>
+      <div class="today-stat"><div class="today-stat-label">${isTomorrow ? '明日' : '今日'}消课金额</div><div class="today-stat-value">¥${dayAmount}</div></div>
+      <div class="today-stat"><div class="today-stat-label">${isTomorrow ? '明日' : '今日'}净收入</div><div class="today-stat-value" style="color:${dayNet>=0?'var(--green)':'var(--red)'}">¥${dayNet}</div></div>
     </div>
-    ${todaySorted.length ? `<div class="today-list">${todaySorted.map(l => `
+    ${daySorted.length ? `<div class="today-list">${daySorted.map(l => `
       <div class="today-lesson" onclick="Router.go('students','${l.studentId}')" style="cursor:pointer">
         <div class="today-time">${l.startTime}<span class="today-time-end"> - ${l.endTime}</span></div>
         <div class="today-info">
           <div class="today-student">${l.studentName} <span class="badge ${l.type === '1对2' ? 'badge-orange' : l.type === '小班' ? 'badge-blue' : 'badge-green'}">${l.type}</span></div>
           <div class="today-meta">${l.location ? l.location + ' · ' : ''}¥${l.amount}${l.courtCost != null ? ' · 场地¥' + l.courtCost : ''}</div>
         </div>
-      </div>`).join('')}</div>` : '<div class="empty" style="padding:16px 0"><div class="empty-icon" style="font-size:34px">🌞</div>今日暂无课程安排，好好休息一下～</div>'}
+      </div>`).join('')}</div>` : `<div class="empty" style="padding:16px 0"><div class="empty-icon" style="font-size:34px">${isTomorrow ? '🌙' : '🌞'}</div>${isTomorrow ? '明日暂无课程安排' : '今日暂无课程安排，好好休息一下～'}</div>`}
   </div>`;
 
   return `
@@ -1003,7 +1013,7 @@ Pages.dashboard = function() {
       <button class="btn btn-primary" onclick="Forms.lesson()">+ 记录上课</button>
     </div>
 
-    ${todayCardHtml}
+    ${dayCardHtml}
 
     <div class="stat-grid">
       <div class="stat-card orange">
@@ -1079,6 +1089,10 @@ Pages.dashboard = function() {
 };
 Pages.finMonth = function(m) {
   Pages._finMonth = m;
+  Router.render();
+};
+Pages.dashDay = function(mode) {
+  Pages._dashDay = mode;
   Router.render();
 };
 
