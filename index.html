@@ -229,6 +229,8 @@ canvas.chart { width: 100% !important; height: 240px; }
 .pkg-info { flex: 1; }
 .pkg-name { font-weight: 600; font-size: 14px; }
 .pkg-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.pkg-calib { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 10px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; }
+.pkg-calib-warn { font-size: 12px; color: #c2410c; }
 
 /* ===== Toast ===== */
 .toast {
@@ -1261,12 +1263,16 @@ Pages.studentDetail = function(id) {
     const cls = remaining <= 2 ? 'danger' : remaining <= 4 ? 'warn' : '';
     const pType = p.type || DB.normalizeType(p.name);
     const pTypeBadge = pType === '1对2' ? 'badge-orange' : pType === '小班' ? 'badge-blue' : pType === '自由定制' ? 'badge-gray' : 'badge-green';
+    // 按实际上课记录重算应耗课时，与记录值对比，发现偏差可校准
+    const theo = Math.round(lessons.filter(l => l.packageId === p.id).reduce((sum, l) => sum + DB.calcConsume(l.duration, p.lessonDuration), 0) * 10) / 10;
+    const drift = Math.abs(theo - p.usedLessons) > 0.05;
     return `<div class="pkg-item">
       <div class="pkg-info">
         <div class="pkg-name">${p.name} <span class="badge ${pTypeBadge}">${pType}</span> <span class="badge badge-gray">${p.lessonDuration || 1}h/节</span> ${p.status === 'finished' ? '<span class="badge badge-gray">已完成</span>' : '<span class="badge badge-green">进行中</span>'}</div>
         <div class="pkg-meta">购买日 ${Utils.formatDateFull(p.purchaseDate)} · 单价 ¥${unitPrice} · 总价 ¥${p.price}</div>
         <div class="progress-bar mt-12"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
         <div class="remaining-info"><span>已用 ${p.usedLessons} / ${p.totalLessons}</span><span class="${remaining <= 2 ? 'text-orange text-bold' : ''}">剩余 ${remaining}</span><span>待消课 ¥${pendingPkg}</span></div>
+        ${drift ? `<div class="pkg-calib"><span class="pkg-calib-warn">⚠ 记录已用 ${p.usedLessons} 节，按实际上课应为 ${theo} 节</span><button class="btn btn-sm btn-orange" onclick="Actions.calibratePackage('${id}','${p.id}')">校准</button></div>` : ''}
       </div>
       <div class="flex gap-8">
         <button class="btn btn-outline btn-sm" onclick="Forms.package('${id}','${p.id}')">编辑</button>
@@ -1274,6 +1280,11 @@ Pages.studentDetail = function(id) {
       </div>
     </div>`;
   }).join('') : '<div class="empty" style="padding:20px"><div class="empty-icon">📦</div>暂无课时包</div>';
+
+  const pkgHasDrift = (s.packages || []).some(p => {
+    const theo = Math.round(lessons.filter(l => l.packageId === p.id).reduce((sum, l) => sum + DB.calcConsume(l.duration, p.lessonDuration), 0) * 10) / 10;
+    return Math.abs(theo - p.usedLessons) > 0.05;
+  });
 
   const planHtml = (s.trainingPlans && s.trainingPlans.length) ? s.trainingPlans.map(p => `
     <div class="plan-item">
@@ -1286,39 +1297,12 @@ Pages.studentDetail = function(id) {
     </div>
   `).join('') : '<div class="empty" style="padding:20px"><div class="empty-icon">📋</div>暂无训练计划</div>';
 
-  const stuGroups = {};
-  lessons.forEach(l => { (stuGroups[l.date] = stuGroups[l.date] || []).push(l); });
-  const stuDates = Object.keys(stuGroups).sort((a, b) => b.localeCompare(a));
-  const lessonHtml = lessons.length ? `<div class="cal-view">${stuDates.map(dateStr => {
-    const dayLessons = stuGroups[dateStr].slice().sort((a, b) => a.startTime.localeCompare(b.startTime));
-    const d = new Date(dateStr.replace(/-/g, '/'));
-    const wd = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
-    const isToday = dateStr === Utils.todayStr();
-    const dayDur = dayLessons.reduce((sum, l) => sum + (l.duration || 1), 0);
-    const dayAmt = dayLessons.reduce((sum, l) => sum + (l.amount || 0), 0);
-    return `<div class="cal-day ${isToday ? 'cal-today' : ''}">
-      <div class="cal-day-head">
-        <div class="cal-date">${Utils.formatDateFull(dateStr)} <span class="cal-weekday">${wd}</span>${isToday ? ' <span class="badge badge-orange">今天</span>' : ''}</div>
-        <div class="cal-day-meta">${dayLessons.length} 节 · ${dayDur}h · ¥${dayAmt}</div>
-      </div>
-      <div class="cal-lessons">${dayLessons.map(l => {
-        let consume = '不扣';
-        if (l.packageId) { const p = s.packages.find(pp => pp.id === l.packageId); if (p) consume = DB.calcConsume(l.duration, p.lessonDuration); }
-        const typeBadge = l.type === '1对2' ? 'badge-orange' : l.type === '小班' ? 'badge-blue' : (l.type === '大班' || l.type === '自由定制') ? 'badge-gray' : 'badge-green';
-        return `<div class="cal-lesson" style="cursor:default">
-          <div class="cal-time">${l.startTime}<span class="cal-time-end">-${l.endTime}</span></div>
-          <div class="cal-main">
-            <div class="cal-student"><span class="badge ${typeBadge}">${l.type}</span>${l.location ? ' <span class="muted">· ' + l.location + '</span>' : ''}</div>
-            <div class="cal-sub muted">${l.duration}h · 消耗 ${consume} 课时 · ¥${l.amount}${l.courtCost != null ? ' · 场地¥' + l.courtCost : ''}${l.notes ? ' · ' + l.notes : ''}</div>
-          </div>
-          <div class="cal-actions">
-            <button class="btn btn-outline btn-sm" onclick="Forms.lesson('${l.id}')">编辑</button>
-            <button class="btn btn-danger btn-sm" onclick="Actions.deleteLesson('${l.id}')">删除</button>
-          </div>
-        </div>`;
-      }).join('')}</div>
-    </div>`;
-  }).join('')}</div>` : '<div class="empty" style="padding:20px">暂无上课记录</div>';
+  // 上课记录以月历呈现：默认定位到该生最近一节课所在月份
+  const stuDatesSorted = lessons.map(l => l.date).sort();
+  const latest = stuDatesSorted[stuDatesSorted.length - 1];
+  if (latest) { const pp = latest.split('-'); Pages._stuCalYM = { y: +pp[0], m: +pp[1] - 1 }; }
+  else { const t = new Date(); Pages._stuCalYM = { y: t.getFullYear(), m: t.getMonth() }; }
+  const stuTotalHours = lessons.reduce((sum, l) => sum + (l.duration || 1), 0);
 
   return `
     <div class="page-header">
@@ -1358,7 +1342,10 @@ Pages.studentDetail = function(id) {
     <div class="card">
       <div class="flex-between mb-8">
         <div style="font-weight:700;font-size:15px">课时包</div>
-        <button class="btn btn-orange btn-sm" onclick="Forms.package('${id}')">+ 购买课时包</button>
+        <div class="flex gap-8">
+          ${pkgHasDrift ? `<button class="btn btn-outline btn-sm" onclick="Actions.calibrateAllPackages('${id}')">校准全部</button>` : ''}
+          <button class="btn btn-orange btn-sm" onclick="Forms.package('${id}')">+ 购买课时包</button>
+        </div>
       </div>
       ${pkgHtml}
     </div>
@@ -1376,13 +1363,65 @@ Pages.studentDetail = function(id) {
 
     <div class="card">
       <div class="flex-between mb-8">
-        <div style="font-weight:700;font-size:15px">上课记录</div>
+        <div style="font-weight:700;font-size:15px">上课记录（日历） <span class="muted" style="font-weight:400;font-size:12px">共 ${lessons.length} 节 · ${stuTotalHours}h</span></div>
         <button class="btn btn-primary btn-sm" onclick="Forms.lesson(null,'${id}')">+ 记录上课</button>
       </div>
-      ${lessonHtml}
+      <div id="stuCal">${Pages.studentCalendarHtml(id)}</div>
     </div>
   `;
 };
+// 学生上课记录月历
+Pages.studentCalendarHtml = function(id) {
+  if (!Pages._stuCalYM) { const t = new Date(); Pages._stuCalYM = { y: t.getFullYear(), m: t.getMonth() }; }
+  const ym = Pages._stuCalYM;
+  const lessons = DB.getLessons().filter(l => l.studentId === id);
+  const byDate = {};
+  lessons.forEach(l => { (byDate[l.date] = byDate[l.date] || []).push(l); });
+
+  const first = new Date(ym.y, ym.m, 1);
+  const startIdx = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(ym.y, ym.m + 1, 0).getDate();
+  const total = Math.ceil((startIdx + daysInMonth) / 7) * 7;
+  const weekNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+  let cells = '';
+  for (let i = 0; i < total; i++) {
+    const dayNum = i - startIdx + 1;
+    const date = new Date(ym.y, ym.m, dayNum);
+    const y = date.getFullYear(), mo = date.getMonth(), d = date.getDate();
+    const dateStr = y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const isOther = mo !== ym.m;
+    const isToday = dateStr === Utils.todayStr();
+    const dayLs = (byDate[dateStr] || []).slice().sort((a, b) => a.startTime.localeCompare(b.startTime));
+    const cls = ['cal-cell'];
+    if (isToday) cls.push('today');
+    if (dayLs.length) cls.push('has-lesson');
+    if (isOther) cls.push('other-month');
+    const lessonsHtml = dayLs.slice(0, 3).map(l =>
+      `<div class="cal-cell-lesson" onclick="event.stopPropagation();Forms.lesson('${l.id}')" title="${l.startTime}-${l.endTime} · ${l.type}">${l.startTime} <span class="cal-cn">${l.type}</span></div>`
+    ).join('') + (dayLs.length > 3 ? `<div class="cal-cell-more">+${dayLs.length - 3} 节</div>` : '');
+    cells += `<div class="${cls.join(' ')}" data-date="${dateStr}"><div class="cal-cell-num">${d}</div>${lessonsHtml}</div>`;
+  }
+
+  return `
+    <div class="cal-month-head">
+      <div class="cal-nav">
+        <button class="btn btn-outline btn-sm" onclick="Pages.studentCalNav('${id}',-1)">‹ 上月</button>
+        <div class="cal-month-title">${ym.y} 年 ${ym.m + 1} 月</div>
+        <button class="btn btn-outline btn-sm" onclick="Pages.studentCalNav('${id}',1)">下月 ›</button>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="Pages.studentCalNav('${id}',0)">回到本月</button>
+    </div>
+    <div class="cal-weekrow">${weekNames.map(w => `<div class="cal-weekcell">${w}</div>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>`;
+};
+Pages.studentCalNav = function(id, delta) {
+  if (delta === 0) { const t = new Date(); Pages._stuCalYM = { y: t.getFullYear(), m: t.getMonth() }; }
+  else { const ym = Pages._stuCalYM; let m = ym.m + delta, y = ym.y; if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; } Pages._stuCalYM = { y, m }; }
+  const el = document.getElementById('stuCal');
+  if (el) el.innerHTML = Pages.studentCalendarHtml(id);
+};
+Pages.studentCalendar = function(id) { const el = document.getElementById('stuCal'); if (el) el.innerHTML = Pages.studentCalendarHtml(id); };
 
 /* ----- 统计报表 ----- */
 Pages.stats = function() {
@@ -2255,6 +2294,33 @@ const Actions = {
       showToast('已删除');
       Router.render();
     }
+  },
+  // 把单个课包的已用课时，按实际上课记录重算对齐（修复小数累积/删改残留导致的偏差）
+  calibratePackage(studentId, pkgId) {
+    const s = DB.getStudent(studentId);
+    const pkg = s && s.packages.find(p => p.id === pkgId);
+    if (!pkg) return;
+    const lessons = DB.getLessons().filter(l => l.studentId === studentId && l.packageId === pkgId);
+    const theo = Math.round(lessons.reduce((sum, l) => sum + DB.calcConsume(l.duration, pkg.lessonDuration), 0) * 10) / 10;
+    pkg.usedLessons = Math.min(pkg.totalLessons, theo);
+    pkg.status = pkg.usedLessons >= pkg.totalLessons ? 'finished' : 'active';
+    DB.save();
+    showToast('已校准：' + pkg.name + ' 已用 ' + pkg.usedLessons + ' 节');
+    Router.render();
+  },
+  // 校准该学生全部课包
+  calibrateAllPackages(studentId) {
+    const s = DB.getStudent(studentId);
+    if (!s || !s.packages) return;
+    s.packages.forEach(pkg => {
+      const lessons = DB.getLessons().filter(l => l.studentId === studentId && l.packageId === pkg.id);
+      const theo = Math.round(lessons.reduce((sum, l) => sum + DB.calcConsume(l.duration, pkg.lessonDuration), 0) * 10) / 10;
+      pkg.usedLessons = Math.min(pkg.totalLessons, theo);
+      pkg.status = pkg.usedLessons >= pkg.totalLessons ? 'finished' : 'active';
+    });
+    DB.save();
+    showToast('已全部校准');
+    Router.render();
   },
   deletePlan(studentId, planId) {
     if (confirm('确定删除这个训练计划？')) {
