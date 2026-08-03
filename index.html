@@ -431,6 +431,7 @@ const DB = {
   // 计算消课数：实际上课时长 ÷ 单节时长
   calcConsume(duration, lessonDuration) {
     if (!lessonDuration || lessonDuration <= 0) lessonDuration = 1;
+    duration = Number(duration) || 0;
     return Math.max(0, Math.round((duration / lessonDuration) * 10) / 10);
   },
   init() {
@@ -1392,13 +1393,13 @@ Pages.studentCalendarHtml = function(id) {
     const dateStr = y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
     const isOther = mo !== ym.m;
     const isToday = dateStr === Utils.todayStr();
-    const dayLs = (byDate[dateStr] || []).slice().sort((a, b) => a.startTime.localeCompare(b.startTime));
+    const dayLs = (byDate[dateStr] || []).slice().sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
     const cls = ['cal-cell'];
     if (isToday) cls.push('today');
     if (dayLs.length) cls.push('has-lesson');
     if (isOther) cls.push('other-month');
     const lessonsHtml = dayLs.slice(0, 3).map(l =>
-      `<div class="cal-cell-lesson" onclick="event.stopPropagation();Forms.lesson('${l.id}')" title="${l.startTime}-${l.endTime} · ${l.type}">${l.startTime} <span class="cal-cn">${l.type}</span></div>`
+      `<div class="cal-cell-lesson" onclick="event.stopPropagation();Forms.lesson('${l.id || ''}')" title="${(l.startTime||'')}-${(l.endTime||'')} · ${(l.type||'')}">${(l.startTime||'—')} <span class="cal-cn">${l.type || '课'}</span></div>`
     ).join('') + (dayLs.length > 3 ? `<div class="cal-cell-more">+${dayLs.length - 3} 节</div>` : '');
     cells += `<div class="${cls.join(' ')}" data-date="${dateStr}"><div class="cal-cell-num">${d}</div>${lessonsHtml}</div>`;
   }
