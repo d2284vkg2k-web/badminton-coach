@@ -138,8 +138,8 @@
           "price": 6598,
           "purchaseDate": "2026-07-20",
           "id": "ms7l2bk293nirk",
-          "usedLessons": 25,
-          "status": "active",
+          "usedLessons": 26,
+          "status": "finished",
           "lessonDuration": 1
         }
       ],
@@ -3292,7 +3292,7 @@
       "packageId": "ms8m3g89ycasyr",
       "amount": 217,
       "location": "",
-      "courtCost": 45,
+      "courtCost": 15,
       "notes": "",
       "id": "ms9tzxbd7uyx11",
       "createdAt": 1785556096105
@@ -3308,7 +3308,7 @@
       "packageId": "ms8m4nkcnhgsdh",
       "amount": 217,
       "location": "",
-      "courtCost": 45,
+      "courtCost": 15,
       "notes": "",
       "id": "ms9u0mtpsxciot",
       "createdAt": 1785556129165
@@ -3324,7 +3324,7 @@
       "packageId": "ms7lxs7i55twym",
       "amount": 283,
       "location": "",
-      "courtCost": 30,
+      "courtCost": 0,
       "notes": "",
       "id": "ms9u1271kxkyaj",
       "createdAt": 1785556149085
