@@ -2070,6 +2070,7 @@ Forms.lesson = function(lessonId, presetStudentId, presetDate) {
     </div>
     <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="l_notes" placeholder="训练内容、表现等">${l ? l.notes || '' : ''}</textarea></div>
   `, `
+    ${isEdit ? `<button class="btn btn-danger" style="margin-right:auto" onclick="Actions.deleteLesson('${lessonId}')">🗑 删除</button>` : ''}
     <button class="btn btn-outline" onclick="closeModal()">取消</button>
     <button class="btn btn-primary" onclick="Forms.lessonSave('${lessonId || ''}')">保存</button>
   `);
@@ -2292,6 +2293,7 @@ const Actions = {
     if (confirm('确定删除这条上课记录？删除后会回退已扣课时。')) {
       DB.deleteLesson(id);
       showToast('已删除');
+      closeModal();
       Router.render();
     }
   },
