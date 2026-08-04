@@ -506,7 +506,7 @@
           "lessonDuration": 1.5,
           "purchaseDate": "2026-08-01",
           "id": "ms9svxv4s9wjva",
-          "usedLessons": 3,
+          "usedLessons": 4,
           "status": "active"
         }
       ],
@@ -531,7 +531,7 @@
           "lessonDuration": 1.5,
           "purchaseDate": "2026-08-01",
           "id": "ms9swaocmoh9zh",
-          "usedLessons": 3,
+          "usedLessons": 4,
           "status": "active"
         }
       ],
@@ -594,7 +594,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-08-01",
           "id": "ms9rtlwprs09sq",
-          "usedLessons": 5,
+          "usedLessons": 6,
           "status": "active"
         }
       ],
@@ -3412,13 +3412,13 @@
     {
       "studentId": "ms9scdwvde4ae7",
       "studentName": "君君",
-      "date": "2026-08-05",
+      "date": "2026-08-07",
       "startTime": "14:30",
       "endTime": "16:00",
       "duration": 1.5,
       "type": "1对1",
       "packageId": "ms9scvxf2xgwjh",
-      "amount": 424.5,
+      "amount": 425,
       "location": "",
       "courtCost": 120,
       "notes": "",
@@ -3552,6 +3552,54 @@
       "notes": "",
       "id": "mscyy9vxppw9ce",
       "createdAt": 1785745815694
+    },
+    {
+      "studentId": "ms94vgyxau2zc1",
+      "studentName": "程乐",
+      "date": "2026-08-05",
+      "startTime": "14:30",
+      "endTime": "15:30",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "ms9rtlwprs09sq",
+      "amount": 283,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "msegvbrbdgv6c1",
+      "createdAt": 1785836377415
+    },
+    {
+      "studentId": "ms8o5zqb68k4mh",
+      "studentName": "闵悦书",
+      "date": "2026-08-05",
+      "startTime": "19:00",
+      "endTime": "20:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "ms9svxv4s9wjva",
+      "amount": 192,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mselal0u94d4n2",
+      "createdAt": 1785843807726
+    },
+    {
+      "studentId": "ms8o66zuy3mvje",
+      "studentName": "闵思睿",
+      "date": "2026-08-05",
+      "startTime": "19:00",
+      "endTime": "20:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "ms9swaocmoh9zh",
+      "amount": 192,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mselb7240xbcvm",
+      "createdAt": 1785843836284
     }
   ],
   "meta": {
