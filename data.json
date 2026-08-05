@@ -210,7 +210,7 @@
           "price": 2599,
           "purchaseDate": "2026-07-08",
           "id": "ms7lh05kfvlkky",
-          "usedLessons": 6,
+          "usedLessons": 5,
           "status": "active",
           "lessonDuration": 1.5,
           "type": "1对2"
@@ -307,7 +307,7 @@
           "price": 2599,
           "purchaseDate": "2026-03-20",
           "id": "ms7m1mv3p98bze",
-          "usedLessons": 9,
+          "usedLessons": 8,
           "status": "active",
           "lessonDuration": 1.5,
           "type": "1对2"
@@ -3376,38 +3376,6 @@
       "notes": "",
       "id": "ms9u3qqis3wcz6",
       "createdAt": 1785556274202
-    },
-    {
-      "studentId": "ms7m19dqbnp974",
-      "studentName": "林姐",
-      "date": "2026-08-05",
-      "startTime": "19:00",
-      "endTime": "20:30",
-      "duration": 1.5,
-      "type": "1对1",
-      "packageId": "ms7m1mv3p98bze",
-      "amount": 217,
-      "location": "",
-      "courtCost": 30,
-      "notes": "",
-      "id": "ms9u4spotnaxwh",
-      "createdAt": 1785556323420
-    },
-    {
-      "studentId": "ms7lg5tnb26zyz",
-      "studentName": "张佳玲",
-      "date": "2026-08-05",
-      "startTime": "19:00",
-      "endTime": "20:30",
-      "duration": 1.5,
-      "type": "1对1",
-      "packageId": "ms7lh05kfvlkky",
-      "amount": 217,
-      "location": "",
-      "courtCost": 30,
-      "notes": "",
-      "id": "ms9u58g6kshnoj",
-      "createdAt": 1785556343814
     },
     {
       "studentId": "ms9scdwvde4ae7",
