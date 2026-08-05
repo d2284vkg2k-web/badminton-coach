@@ -40,7 +40,7 @@
           "price": 2299,
           "purchaseDate": "2026-07-30",
           "id": "ms7kq36k6fqh1w",
-          "usedLessons": 5,
+          "usedLessons": 6,
           "status": "active",
           "lessonDuration": 1
         }
@@ -3744,6 +3744,22 @@
       "notes": "",
       "id": "msfg9tfl76ufd7",
       "createdAt": 1785895840065
+    },
+    {
+      "studentId": "ms7kprtgghruuw",
+      "studentName": "卢耀文",
+      "date": "2026-08-05",
+      "startTime": "20:30",
+      "endTime": "21:30",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "ms7kq36k6fqh1w",
+      "amount": 287,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "msfso4d8o8m6tk",
+      "createdAt": 1785916662812
     }
   ],
   "meta": {
