@@ -359,7 +359,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-07-31",
           "id": "ms8lx2e1hzzzvb",
-          "usedLessons": 4,
+          "usedLessons": 4.5,
           "status": "active"
         }
       ],
@@ -483,6 +483,17 @@
           "id": "ms94gil71fclv3",
           "usedLessons": 24,
           "status": "finished"
+        },
+        {
+          "name": "1对1",
+          "type": "1对1",
+          "totalLessons": 12,
+          "price": 3299,
+          "lessonDuration": 1,
+          "purchaseDate": "2026-08-07",
+          "id": "msidbctly1l8uy",
+          "usedLessons": 0,
+          "status": "active"
         }
       ],
       "trainingPlans": [],
@@ -653,22 +664,6 @@
     }
   ],
   "lessons": [
-    {
-      "studentId": "ms8lwk9dea84op",
-      "studentName": "亦秦",
-      "date": "2026-08-07",
-      "startTime": "16:00",
-      "endTime": "17:00",
-      "duration": 1,
-      "type": "1对1",
-      "packageId": "ms8lx2e1hzzzvb",
-      "amount": 303,
-      "location": "",
-      "courtCost": 80,
-      "notes": "",
-      "id": "ms8ng1wrq0za10",
-      "createdAt": 1785484625067
-    },
     {
       "studentId": "ms8lwk9dea84op",
       "studentName": "亦秦",
@@ -3381,8 +3376,8 @@
       "studentId": "ms9scdwvde4ae7",
       "studentName": "君君",
       "date": "2026-08-07",
-      "startTime": "14:30",
-      "endTime": "16:00",
+      "startTime": "15:30",
+      "endTime": "17:00",
       "duration": 1.5,
       "type": "1对1",
       "packageId": "ms9scvxf2xgwjh",
@@ -3660,7 +3655,7 @@
       "packageId": "ms9swaocmoh9zh",
       "amount": 192,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 30,
       "notes": "",
       "id": "msfg3vi7rgneih",
       "createdAt": 1785895562815
@@ -3676,7 +3671,7 @@
       "packageId": "ms7m1mv3p98bze",
       "amount": 217,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 30,
       "notes": "",
       "id": "msfg9917x8py13",
       "createdAt": 1785895813627
@@ -3692,7 +3687,7 @@
       "packageId": "ms7lh05kfvlkky",
       "amount": 217,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 30,
       "notes": "",
       "id": "msfg9tfl76ufd7",
       "createdAt": 1785895840065
@@ -3740,7 +3735,7 @@
       "packageId": "ms7kq36k6fqh1w",
       "amount": 287,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 80,
       "notes": "",
       "id": "msg8a5otyxp88y",
       "createdAt": 1785942885197
@@ -3754,9 +3749,9 @@
       "duration": 2,
       "type": "1对1",
       "packageId": "ms9ro8vn2udtxy",
-      "amount": 275,
+      "amount": 550,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 90,
       "notes": "",
       "id": "msg8axg74wsezx",
       "createdAt": 1785942921175
@@ -4208,6 +4203,22 @@
       "notes": "",
       "id": "msg98i2d8bbmwh",
       "createdAt": 1785944487541
+    },
+    {
+      "studentId": "ms8lwk9dea84op",
+      "studentName": "亦秦",
+      "date": "2026-08-08",
+      "startTime": "17:00",
+      "endTime": "18:30",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "ms8lx2e1hzzzvb",
+      "amount": 455,
+      "location": "",
+      "courtCost": 120,
+      "notes": "",
+      "id": "msiglpxw0cbw2m",
+      "createdAt": 1786077793940
     }
   ],
   "meta": {
