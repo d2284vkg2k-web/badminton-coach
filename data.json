@@ -259,7 +259,7 @@
           "price": 6600,
           "purchaseDate": "2026-07-04",
           "id": "ms7lmgn0769t0y",
-          "usedLessons": 19,
+          "usedLessons": 15,
           "status": "active",
           "lessonDuration": 1
         }
@@ -3623,7 +3623,7 @@
       "packageId": "ms7ljj5cbg6e1u",
       "amount": 260,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 30,
       "notes": "",
       "id": "msfg1ln4u6r7ur",
       "createdAt": 1785895456720
@@ -3805,22 +3805,6 @@
       "createdAt": 1785943155635
     },
     {
-      "studentId": "ms7llz3u1fmgo4",
-      "studentName": "思齐+承宇",
-      "date": "2026-08-10",
-      "startTime": "19:00",
-      "endTime": "21:00",
-      "duration": 2,
-      "type": "1对1",
-      "packageId": "ms7lmgn0769t0y",
-      "amount": 550,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "msg8h63sby98q2",
-      "createdAt": 1785943212328
-    },
-    {
       "studentId": "ms8o5zqb68k4mh",
       "studentName": "闵悦书",
       "date": "2026-08-11",
@@ -3851,22 +3835,6 @@
       "notes": "",
       "id": "msg8i1jqpxnjqx",
       "createdAt": 1785943253078
-    },
-    {
-      "studentId": "ms7llz3u1fmgo4",
-      "studentName": "思齐+承宇",
-      "date": "2026-08-11",
-      "startTime": "19:00",
-      "endTime": "21:00",
-      "duration": 2,
-      "type": "1对1",
-      "packageId": "ms7lmgn0769t0y",
-      "amount": 275,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "msg8ifmtj6p30b",
-      "createdAt": 1785943271333
     },
     {
       "studentId": "ms8o5zqb68k4mh",
@@ -4233,8 +4201,8 @@
       "location": "",
       "courtCost": 0,
       "notes": "",
-      "id": "msin5x0tblx8x8",
-      "createdAt": 1786088813933
+      "id": "msih36td5e116t",
+      "createdAt": 1786078608961
     }
   ],
   "meta": {
