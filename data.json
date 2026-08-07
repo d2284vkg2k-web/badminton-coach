@@ -605,7 +605,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-08-01",
           "id": "ms9rtlwprs09sq",
-          "usedLessons": 6,
+          "usedLessons": 7,
           "status": "active"
         }
       ],
@@ -4219,6 +4219,22 @@
       "notes": "",
       "id": "msiglpxw0cbw2m",
       "createdAt": 1786077793940
+    },
+    {
+      "studentId": "ms94vgyxau2zc1",
+      "studentName": "程乐",
+      "date": "2026-08-07",
+      "startTime": "14:30",
+      "endTime": "15:30",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "ms9rtlwprs09sq",
+      "amount": 283,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "msin5x0tblx8x8",
+      "createdAt": 1786088813933
     }
   ],
   "meta": {
