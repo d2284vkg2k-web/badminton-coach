@@ -542,7 +542,7 @@
           "lessonDuration": 1.5,
           "purchaseDate": "2026-08-01",
           "id": "ms9swaocmoh9zh",
-          "usedLessons": 15,
+          "usedLessons": 14,
           "status": "active"
         }
       ],
@@ -4139,22 +4139,6 @@
       "notes": "",
       "id": "msg97wkfwaspcm",
       "createdAt": 1785944459679
-    },
-    {
-      "studentId": "ms8o66zuy3mvje",
-      "studentName": "闵思睿",
-      "date": "2026-08-19",
-      "startTime": "17:30",
-      "endTime": "19:00",
-      "duration": 1.5,
-      "type": "1对2",
-      "packageId": "ms9swaocmoh9zh",
-      "amount": 134,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "msg985ijh0tc8c",
-      "createdAt": 1785944471275
     },
     {
       "studentId": "ms8o66zuy3mvje",
