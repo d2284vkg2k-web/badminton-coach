@@ -526,67 +526,83 @@ const DB = {
   },
   // Lessons
   getLessons() { return this.data.lessons; },
+  // 跨课包扣减：优先扣主课包，不足时按购买日期升序（先旧后新）自动溢出到续课包。
+  // 返回每包的扣减明细 [{pkgId, amount}]，便于编辑/删除时精确回退。
+  deductPackages(studentId, primaryPkgId, duration) {
+    const s = this.getStudent(studentId);
+    if (!s || !s.packages || !primaryPkgId || !(duration > 0)) return [];
+    const breakdown = [];
+    let remainDur = duration;
+    const allocate = (pkg) => {
+      const ld = pkg.lessonDuration || 1;
+      const availLessons = Math.max(0, pkg.totalLessons - pkg.usedLessons);
+      const availDur = availLessons * ld;
+      const alloc = Math.min(availDur, remainDur);
+      if (alloc > 0) {
+        const lessons = Math.round((alloc / ld) * 10) / 10;
+        pkg.usedLessons = Math.round((pkg.usedLessons + lessons) * 10) / 10;
+        pkg.status = pkg.usedLessons >= pkg.totalLessons ? 'finished' : 'active';
+        breakdown.push({ pkgId: pkg.id, amount: lessons });
+        remainDur = Math.round((remainDur - alloc) * 10) / 10;
+      }
+    };
+    const primary = s.packages.find(p => p.id === primaryPkgId);
+    if (primary && primary.status === 'active') allocate(primary);
+    if (remainDur > 1e-9) {
+      s.packages
+        .filter(p => p.id !== primaryPkgId && p.status === 'active')
+        .sort((a, b) => (a.purchaseDate || '').localeCompare(b.purchaseDate || '') || (a.createdAt || 0) - (b.createdAt || 0))
+        .forEach(p => { if (remainDur > 1e-9) allocate(p); });
+    }
+    return breakdown;
+  },
+  // 回退一次扣减拆分（兼容无 deductions 字段的历史记录）
+  rollbackDeductions(studentId, items) {
+    const s = this.getStudent(studentId);
+    if (!s) return;
+    (items || []).forEach(it => {
+      const pkg = s.packages.find(p => p.id === it.pkgId);
+      if (pkg) {
+        pkg.usedLessons = Math.max(0, Math.round((pkg.usedLessons - it.amount) * 10) / 10);
+        if (pkg.usedLessons < pkg.totalLessons) pkg.status = 'active';
+      }
+    });
+  },
+  // 兼容旧记录：无 deductions 时按单一课包+时长推算
+  _legacyItems(lesson) {
+    if (lesson.deductions && lesson.deductions.length) return lesson.deductions;
+    if (lesson.packageId) {
+      const s = this.getStudent(lesson.studentId);
+      const pkg = s && s.packages.find(p => p.id === lesson.packageId);
+      const ld = pkg ? pkg.lessonDuration || 1 : 1;
+      return [{ pkgId: lesson.packageId, amount: this.calcConsume(lesson.duration, ld) }];
+    }
+    return [];
+  },
   addLesson(l) {
     l.id = this.uid();
     l.createdAt = Date.now();
     this.data.lessons.push(l);
-    // 扣减课时包：消耗 = 实际时长 ÷ 单节时长
-    if (l.packageId) {
-      const s = this.getStudent(l.studentId);
-      const pkg = s && s.packages.find(p => p.id === l.packageId);
-      if (pkg) {
-        const consume = this.calcConsume(l.duration, pkg.lessonDuration);
-        pkg.usedLessons = Math.min(pkg.totalLessons, Math.round((pkg.usedLessons + consume) * 10) / 10);
-        if (pkg.usedLessons >= pkg.totalLessons) pkg.status = 'finished';
-      }
-    }
+    l.deductions = l.packageId ? this.deductPackages(l.studentId, l.packageId, l.duration || 1) : [];
     this.save();
     return l;
   },
   updateLesson(id, patch) {
     const l = this.data.lessons.find(x => x.id === id);
     if (!l) return;
-    // 如果换了课时包或时长变化，先回退旧的，再扣减新的
     const newPkgId = patch.packageId !== undefined ? patch.packageId : l.packageId;
     const newDuration = patch.duration !== undefined ? patch.duration : l.duration;
-    if (newPkgId !== l.packageId || newDuration !== l.duration) {
-      // 回退旧课包
-      if (l.packageId) {
-        const s = this.getStudent(l.studentId);
-        const oldPkg = s && s.packages.find(p => p.id === l.packageId);
-        if (oldPkg) {
-          const oldConsume = this.calcConsume(l.duration, oldPkg.lessonDuration);
-          oldPkg.usedLessons = Math.max(0, Math.round((oldPkg.usedLessons - oldConsume) * 10) / 10);
-          if (oldPkg.usedLessons < oldPkg.totalLessons) oldPkg.status = 'active';
-        }
-      }
-      // 扣减新课包
-      if (newPkgId) {
-        const s = this.getStudent(l.studentId);
-        const newPkg = s && s.packages.find(p => p.id === newPkgId);
-        if (newPkg) {
-          const newConsume = this.calcConsume(newDuration, newPkg.lessonDuration);
-          newPkg.usedLessons = Math.min(newPkg.totalLessons, Math.round((newPkg.usedLessons + newConsume) * 10) / 10);
-          if (newPkg.usedLessons >= newPkg.totalLessons) newPkg.status = 'finished';
-        }
-      }
-    }
+    // 先回退旧拆分（兼容历史记录），再按新值重新扣减（自动跨课包溢出）
+    this.rollbackDeductions(l.studentId, this._legacyItems(l));
+    l.deductions = newPkgId ? this.deductPackages(l.studentId, newPkgId, newDuration || 1) : [];
     Object.assign(l, patch);
     this.save();
   },
   deleteLesson(id) {
     const l = this.data.lessons.find(x => x.id === id);
     if (!l) return;
-    // 回退课时包：按实际消耗恢复
-    if (l.packageId) {
-      const s = this.getStudent(l.studentId);
-      const pkg = s && s.packages.find(p => p.id === l.packageId);
-      if (pkg) {
-        const consume = this.calcConsume(l.duration, pkg.lessonDuration);
-        pkg.usedLessons = Math.max(0, Math.round((pkg.usedLessons - consume) * 10) / 10);
-        if (pkg.usedLessons < pkg.totalLessons) pkg.status = 'active';
-      }
-    }
+    // 按记录的实际扣减拆分精确回退（兼容历史记录）
+    this.rollbackDeductions(l.studentId, this._legacyItems(l));
     this.data.lessons = this.data.lessons.filter(x => x.id !== id);
     this.save();
   },
@@ -2066,8 +2082,9 @@ Forms.lesson = function(lessonId, presetStudentId, presetDate) {
     <div class="form-group"><label class="form-label">场地</label><input class="form-input" id="l_location" value="${l ? l.location || '' : ''}" placeholder="如：1号场地"></div>
     <div class="form-group"><label class="form-label">扣减课时包 <span style="font-weight:400;color:var(--gray-500)">（选课包会自动带出课程类型，改类型也会自动匹配同类型课包）</span></label>
       <select class="form-select" id="l_package" onchange="Forms.lessonOnPackageChange()"><option value="">不扣课时</option></select>
-      <div class="form-hint" id="pkgInfo" style="font-size:12px;color:var(--gray-500);margin-top:4px"></div>
-    </div>
+        <div class="form-hint" id="pkgInfo" style="font-size:12px;color:var(--gray-500);margin-top:4px"></div>
+        <div class="form-hint" id="deductInfo" style="font-size:12px;color:var(--green);margin-top:2px"></div>
+      </div>
     <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="l_notes" placeholder="训练内容、表现等">${l ? l.notes || '' : ''}</textarea></div>
   `, `
     ${isEdit ? `<button class="btn btn-danger" style="margin-right:auto" onclick="Actions.deleteLesson('${lessonId}')">🗑 删除</button>` : ''}
@@ -2080,6 +2097,10 @@ Forms.lesson = function(lessonId, presetStudentId, presetDate) {
     const cur = DB.getStudent(l.studentId);
     if (cur) { document.getElementById('l_student').value = l.studentId; document.getElementById('l_student_input').value = cur.name; }
     Forms.lessonOnStudentChange(l.packageId);
+    if (l.deductions && l.deductions.length) {
+      const txt = l.deductions.map(d => { const p = cur.packages.find(x => x.id === d.pkgId); return (p ? p.name : '课包') + ' ' + d.amount + ' 节'; }).join(' + ');
+      const el = document.getElementById('deductInfo'); if (el) el.textContent = '本次实际扣减：' + txt;
+    }
   } else if (presetStudentId) {
     const cur = DB.getStudent(presetStudentId);
     if (cur) { document.getElementById('l_student').value = presetStudentId; document.getElementById('l_student_input').value = cur.name; }
