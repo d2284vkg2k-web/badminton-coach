@@ -359,7 +359,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-07-31",
           "id": "ms8lx2e1hzzzvb",
-          "usedLessons": 7.5,
+          "usedLessons": 4.5,
           "status": "active"
         }
       ],
@@ -3922,7 +3922,7 @@
       "packageId": "ms7m1mv3p98bze",
       "amount": 217,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 45,
       "notes": "",
       "id": "msg8ub8d1qzwdx",
       "createdAt": 1785943825501
@@ -3938,7 +3938,7 @@
       "packageId": "ms7lh05kfvlkky",
       "amount": 217,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 45,
       "notes": "",
       "id": "msg8ulvyd7n9v1",
       "createdAt": 1785943839310
@@ -4120,22 +4120,6 @@
       "createdAt": 1786507274783
     },
     {
-      "studentId": "ms8lwk9dea84op",
-      "studentName": "亦秦",
-      "date": "2026-08-15",
-      "startTime": "17:00",
-      "endTime": "18:30",
-      "duration": 1.5,
-      "type": "1对1",
-      "packageId": "ms8lx2e1hzzzvb",
-      "amount": 303,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "mspkbcy98rpl2q",
-      "createdAt": 1786507292241
-    },
-    {
       "studentId": "ms7kws0vdb7uyw",
       "studentName": "孙燕",
       "date": "2026-08-15",
@@ -4150,22 +4134,6 @@
       "notes": "",
       "id": "mspkbl0ii6pjj8",
       "createdAt": 1786507302690
-    },
-    {
-      "studentId": "ms8lwk9dea84op",
-      "studentName": "亦秦",
-      "date": "2026-08-16",
-      "startTime": "17:00",
-      "endTime": "18:30",
-      "duration": 1.5,
-      "type": "1对1",
-      "packageId": "ms8lx2e1hzzzvb",
-      "amount": 303,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "mspkc8jl822lwc",
-      "createdAt": 1786507333185
     },
     {
       "studentId": "ms7lxaxrcevydi",
