@@ -3948,16 +3948,26 @@
       "studentName": "崔浩宸",
       "date": "2026-08-15",
       "startTime": "15:00",
-      "endTime": "16:00",
-      "duration": 1,
+      "endTime": "17:00",
+      "duration": 2,
       "type": "1对1",
       "packageId": "ms9ro8vn2udtxy",
       "amount": 550,
       "location": "",
-      "courtCost": 0,
+      "courtCost": 90,
       "notes": "",
       "id": "msg90n4krwboir",
-      "createdAt": 1785944120852
+      "createdAt": 1785944120852,
+      "deductions": [
+        {
+          "pkgId": "ms9ro8vn2udtxy",
+          "amount": 1
+        },
+        {
+          "pkgId": "msplsxb47jrhei",
+          "amount": 1
+        }
+      ]
     },
     {
       "studentId": "ms8o5zqb68k4mh",
