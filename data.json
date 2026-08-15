@@ -630,8 +630,8 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-06-20",
           "id": "ms9ro8vn2udtxy",
-          "usedLessons": 12,
-          "status": "finished"
+          "usedLessons": 11,
+          "status": "active"
         },
         {
           "name": "1对1",
@@ -3973,33 +3973,45 @@
       "studentId": "ms8o5zqb68k4mh",
       "studentName": "闵悦书",
       "date": "2026-08-17",
-      "startTime": "17:30",
-      "endTime": "19:00",
+      "startTime": "19:00",
+      "endTime": "20:30",
       "duration": 1.5,
       "type": "1对2",
       "packageId": "ms9svxv4s9wjva",
-      "amount": 134,
+      "amount": 192,
       "location": "",
       "courtCost": 0,
       "notes": "",
       "id": "msg90zgbe1kgtk",
-      "createdAt": 1785944136827
+      "createdAt": 1785944136827,
+      "deductions": [
+        {
+          "pkgId": "ms9svxv4s9wjva",
+          "amount": 1
+        }
+      ]
     },
     {
       "studentId": "ms8o66zuy3mvje",
       "studentName": "闵思睿",
       "date": "2026-08-17",
-      "startTime": "17:30",
-      "endTime": "19:00",
+      "startTime": "19:00",
+      "endTime": "20:30",
       "duration": 1.5,
       "type": "1对2",
       "packageId": "ms9swaocmoh9zh",
-      "amount": 134,
+      "amount": 192,
       "location": "",
       "courtCost": 0,
       "notes": "",
       "id": "msg918nrh1xoq1",
-      "createdAt": 1785944148759
+      "createdAt": 1785944148759,
+      "deductions": [
+        {
+          "pkgId": "ms9swaocmoh9zh",
+          "amount": 1
+        }
+      ]
     },
     {
       "studentId": "ms8o5zqb68k4mh",
@@ -4148,10 +4160,10 @@
     {
       "studentId": "ms9rnsivzlxt2s",
       "studentName": "崔浩宸",
-      "date": "2026-08-22",
+      "date": "2026-08-20",
       "startTime": "15:00",
-      "endTime": "17:00",
-      "duration": 2,
+      "endTime": "16:00",
+      "duration": 1,
       "type": "1对1",
       "packageId": "ms9ro8vn2udtxy",
       "amount": 550,
@@ -4159,7 +4171,13 @@
       "courtCost": 0,
       "notes": "",
       "id": "msplu2aib9zdwj",
-      "createdAt": 1786509844506
+      "createdAt": 1786509844506,
+      "deductions": [
+        {
+          "pkgId": "ms9ro8vn2udtxy",
+          "amount": 1
+        }
+      ]
     },
     {
       "studentId": "ms9rnsivzlxt2s",
@@ -4180,7 +4198,7 @@
     {
       "studentId": "ms9rnsivzlxt2s",
       "studentName": "崔浩宸",
-      "date": "2026-08-22",
+      "date": "2026-08-20",
       "startTime": "16:00",
       "endTime": "17:00",
       "duration": 1,
@@ -4191,7 +4209,13 @@
       "courtCost": 0,
       "notes": "",
       "id": "msplvln8sdjii0",
-      "createdAt": 1786509916244
+      "createdAt": 1786509916244,
+      "deductions": [
+        {
+          "pkgId": "msplsxb47jrhei",
+          "amount": 1
+        }
+      ]
     },
     {
       "studentId": "ms94vgyxau2zc1",
