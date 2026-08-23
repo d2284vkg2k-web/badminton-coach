@@ -259,7 +259,7 @@
           "price": 6600,
           "purchaseDate": "2026-07-04",
           "id": "ms7lmgn0769t0y",
-          "usedLessons": 21,
+          "usedLessons": 23,
           "status": "active",
           "lessonDuration": 1
         }
@@ -716,8 +716,8 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-08-20",
           "id": "mt19ox3mw369wp",
-          "usedLessons": 4.5,
-          "status": "active"
+          "usedLessons": 12,
+          "status": "finished"
         }
       ],
       "trainingPlans": [],
@@ -4678,28 +4678,6 @@
       ]
     },
     {
-      "studentId": "mt19ojaoj54ljs",
-      "studentName": "丫丫",
-      "date": "2026-08-18",
-      "startTime": "09:00",
-      "endTime": "10:00",
-      "duration": 1,
-      "type": "1对1",
-      "packageId": "mt19ox3mw369wp",
-      "amount": 283,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "mt19ty2u0ytqin",
-      "createdAt": 1787215277766,
-      "deductions": [
-        {
-          "pkgId": "mt19ox3mw369wp",
-          "amount": 1
-        }
-      ]
-    },
-    {
       "studentId": "ms7llz3u1fmgo4",
       "studentName": "思齐+承宇",
       "date": "2026-08-21",
@@ -4766,28 +4744,6 @@
       ]
     },
     {
-      "studentId": "mt19ojaoj54ljs",
-      "studentName": "丫丫",
-      "date": "2026-08-23",
-      "startTime": "07:30",
-      "endTime": "09:00",
-      "duration": 1.5,
-      "type": "1对1",
-      "packageId": "mt19ox3mw369wp",
-      "amount": 283,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "mt1ab5cf9a6in0",
-      "createdAt": 1787216080335,
-      "deductions": [
-        {
-          "pkgId": "mt19ox3mw369wp",
-          "amount": 1.5
-        }
-      ]
-    },
-    {
       "studentId": "ms9scdwvde4ae7",
       "studentName": "君君",
       "date": "2026-08-25",
@@ -4806,6 +4762,182 @@
         {
           "pkgId": "ms9scvxf2xgwjh",
           "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "mt19ojaoj54ljs",
+      "studentName": "丫丫",
+      "date": "2026-08-23",
+      "startTime": "07:30",
+      "endTime": "09:00",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "mt19ox3mw369wp",
+      "amount": 425,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt5mthlyf9l6lp",
+      "createdAt": 1787478956134,
+      "deductions": [
+        {
+          "pkgId": "mt19ox3mw369wp",
+          "amount": 1.5
+        }
+      ]
+    },
+    {
+      "studentId": "mt19ojaoj54ljs",
+      "studentName": "丫丫",
+      "date": "2026-08-18",
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "mt19ox3mw369wp",
+      "amount": 283,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt5mtvwh9kn202",
+      "createdAt": 1787478974657,
+      "deductions": [
+        {
+          "pkgId": "mt19ox3mw369wp",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "mt19ojaoj54ljs",
+      "studentName": "丫丫",
+      "date": "2026-08-24",
+      "startTime": "08:00",
+      "endTime": "09:30",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "mt19ox3mw369wp",
+      "amount": 283,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt5muir344ey8w",
+      "createdAt": 1787479004271,
+      "deductions": [
+        {
+          "pkgId": "mt19ox3mw369wp",
+          "amount": 1.5
+        }
+      ]
+    },
+    {
+      "studentId": "mt19ojaoj54ljs",
+      "studentName": "丫丫",
+      "date": "2026-08-25",
+      "startTime": "08:00",
+      "endTime": "09:30",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "mt19ox3mw369wp",
+      "amount": 425,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt5mutt2xws3zb",
+      "createdAt": 1787479018598,
+      "deductions": [
+        {
+          "pkgId": "mt19ox3mw369wp",
+          "amount": 1.5
+        }
+      ]
+    },
+    {
+      "studentId": "mt19ojaoj54ljs",
+      "studentName": "丫丫",
+      "date": "2026-08-26",
+      "startTime": "08:00",
+      "endTime": "09:30",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "mt19ox3mw369wp",
+      "amount": 425,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt5mw39vb7ww8m",
+      "createdAt": 1787479077523,
+      "deductions": [
+        {
+          "pkgId": "mt19ox3mw369wp",
+          "amount": 1.5
+        }
+      ]
+    },
+    {
+      "studentId": "mt19ojaoj54ljs",
+      "studentName": "丫丫",
+      "date": "2026-08-27",
+      "startTime": "08:00",
+      "endTime": "09:30",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "mt19ox3mw369wp",
+      "amount": 425,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt5mweb53b79jn",
+      "createdAt": 1787479091825,
+      "deductions": [
+        {
+          "pkgId": "mt19ox3mw369wp",
+          "amount": 1.5
+        }
+      ]
+    },
+    {
+      "studentId": "mt19ojaoj54ljs",
+      "studentName": "丫丫",
+      "date": "2026-08-28",
+      "startTime": "08:00",
+      "endTime": "09:30",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "mt19ox3mw369wp",
+      "amount": 425,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt5mwqf5ga8gb7",
+      "createdAt": 1787479107521,
+      "deductions": [
+        {
+          "pkgId": "mt19ox3mw369wp",
+          "amount": 1.5
+        }
+      ]
+    },
+    {
+      "studentId": "ms7llz3u1fmgo4",
+      "studentName": "思齐+承宇",
+      "date": "2026-08-25",
+      "startTime": "09:30",
+      "endTime": "11:30",
+      "duration": 2,
+      "type": "1对1",
+      "packageId": "ms7lmgn0769t0y",
+      "amount": 413,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt5mxx1zp6xuvp",
+      "createdAt": 1787479162775,
+      "deductions": [
+        {
+          "pkgId": "ms7lmgn0769t0y",
+          "amount": 2
         }
       ]
     }
