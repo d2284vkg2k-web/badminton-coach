@@ -594,7 +594,19 @@
       "phone": "",
       "notes": "",
       "id": "ms94v9yv59fdn1",
-      "packages": [],
+      "packages": [
+        {
+          "name": "1对1",
+          "type": "1对1",
+          "totalLessons": 13,
+          "price": 3309,
+          "lessonDuration": 1,
+          "purchaseDate": "2026-08-25",
+          "id": "mt818g81efhl8b",
+          "usedLessons": 2,
+          "status": "active"
+        }
+      ],
       "trainingPlans": [],
       "createdAt": 1785513888823
     },
@@ -5064,6 +5076,50 @@
       "deductions": [
         {
           "pkgId": "ms7kx9oxlarkuq",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms94v9yv59fdn1",
+      "studentName": "潘",
+      "date": "2026-08-25",
+      "startTime": "19:30",
+      "endTime": "20:30",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "mt818g81efhl8b",
+      "amount": 255,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt8190q0fgb83z",
+      "createdAt": 1787624127720,
+      "deductions": [
+        {
+          "pkgId": "mt818g81efhl8b",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms94v9yv59fdn1",
+      "studentName": "潘",
+      "date": "2026-08-27",
+      "startTime": "20:30",
+      "endTime": "21:30",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "mt818g81efhl8b",
+      "amount": 255,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mt819j5ud9moq9",
+      "createdAt": 1787624151618,
+      "deductions": [
+        {
+          "pkgId": "mt818g81efhl8b",
           "amount": 1
         }
       ]
