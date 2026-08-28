@@ -16,7 +16,7 @@
           "price": 3399,
           "purchaseDate": "2026-04-02",
           "id": "ms7knmf847msjd",
-          "usedLessons": 4,
+          "usedLessons": 5,
           "status": "active",
           "lessonDuration": 1
         }
@@ -395,7 +395,7 @@
           "lessonDuration": 1.5,
           "purchaseDate": "2026-07-31",
           "id": "ms8m3g89ycasyr",
-          "usedLessons": 5,
+          "usedLessons": 6,
           "status": "active"
         },
         {
@@ -431,7 +431,7 @@
           "lessonDuration": 1.5,
           "purchaseDate": "2026-06-30",
           "id": "ms8m4nkcnhgsdh",
-          "usedLessons": 5,
+          "usedLessons": 6,
           "status": "active"
         },
         {
@@ -503,7 +503,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-08-07",
           "id": "msidbctly1l8uy",
-          "usedLessons": 0,
+          "usedLessons": 1.5,
           "status": "active"
         }
       ],
@@ -603,7 +603,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-08-25",
           "id": "mt818g81efhl8b",
-          "usedLessons": 2,
+          "usedLessons": 1,
           "status": "active"
         }
       ],
@@ -5037,50 +5037,6 @@
       ]
     },
     {
-      "studentId": "ms7m19dqbnp974",
-      "studentName": "林姐",
-      "date": "2026-08-27",
-      "startTime": "19:00",
-      "endTime": "20:30",
-      "duration": 1.5,
-      "type": "1对2",
-      "packageId": "mt814upi2ehl9n",
-      "amount": 217,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "mt815cifppt5qi",
-      "createdAt": 1787623956375,
-      "deductions": [
-        {
-          "pkgId": "mt814upi2ehl9n",
-          "amount": 1
-        }
-      ]
-    },
-    {
-      "studentId": "ms7kws0vdb7uyw",
-      "studentName": "孙燕",
-      "date": "2026-08-27",
-      "startTime": "19:00",
-      "endTime": "20:30",
-      "duration": 1.5,
-      "type": "1对2",
-      "packageId": "ms7kx9oxlarkuq",
-      "amount": 217,
-      "location": "",
-      "courtCost": 0,
-      "notes": "",
-      "id": "mt81662cuypgds",
-      "createdAt": 1787623994676,
-      "deductions": [
-        {
-          "pkgId": "ms7kx9oxlarkuq",
-          "amount": 1
-        }
-      ]
-    },
-    {
       "studentId": "ms94v9yv59fdn1",
       "studentName": "潘",
       "date": "2026-08-25",
@@ -5103,24 +5059,134 @@
       ]
     },
     {
-      "studentId": "ms94v9yv59fdn1",
-      "studentName": "潘",
-      "date": "2026-08-27",
-      "startTime": "20:30",
-      "endTime": "21:30",
+      "studentId": "ms7kn3yws26xqv",
+      "studentName": "子尧",
+      "date": "2026-08-28",
+      "startTime": "19:00",
+      "endTime": "20:00",
       "duration": 1,
       "type": "1对1",
-      "packageId": "mt818g81efhl8b",
-      "amount": 255,
+      "packageId": "ms7knmf847msjd",
+      "amount": 283,
       "location": "",
       "courtCost": 0,
       "notes": "",
-      "id": "mt819j5ud9moq9",
-      "createdAt": 1787624151618,
+      "id": "mtcbiss3djr8pt",
+      "createdAt": 1787883244851,
       "deductions": [
         {
-          "pkgId": "mt818g81efhl8b",
+          "pkgId": "ms7knmf847msjd",
           "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms7kws0vdb7uyw",
+      "studentName": "孙燕",
+      "date": "2026-08-29",
+      "startTime": "16:00",
+      "endTime": "17:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "ms7kx9oxlarkuq",
+      "amount": 217,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mtcbkmlrqvvccv",
+      "createdAt": 1787883330159,
+      "deductions": [
+        {
+          "pkgId": "ms7kx9oxlarkuq",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms7m19dqbnp974",
+      "studentName": "林姐",
+      "date": "2026-08-29",
+      "startTime": "16:00",
+      "endTime": "17:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "mt814upi2ehl9n",
+      "amount": 217,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mtcblnxg469opp",
+      "createdAt": 1787883378532,
+      "deductions": [
+        {
+          "pkgId": "mt814upi2ehl9n",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms8m2z8llyd95f",
+      "studentName": "张可",
+      "date": "2026-08-29",
+      "startTime": "10:00",
+      "endTime": "11:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "ms8m4nkcnhgsdh",
+      "amount": 217,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mtcbmjuac8qr6f",
+      "createdAt": 1787883419890,
+      "deductions": [
+        {
+          "pkgId": "ms8m4nkcnhgsdh",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms8m2rexth9gp3",
+      "studentName": "刘欣",
+      "date": "2026-08-29",
+      "startTime": "10:00",
+      "endTime": "11:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "ms8m3g89ycasyr",
+      "amount": 217,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mtcbn0c3o6pmvj",
+      "createdAt": 1787883441267,
+      "deductions": [
+        {
+          "pkgId": "ms8m3g89ycasyr",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms8m5zkisakq30",
+      "studentName": "铭一",
+      "date": "2026-08-30",
+      "startTime": "16:00",
+      "endTime": "17:30",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "msidbctly1l8uy",
+      "amount": 275,
+      "location": "",
+      "courtCost": 0,
+      "notes": "",
+      "id": "mtcbp4qy515qge",
+      "createdAt": 1787883540298,
+      "deductions": [
+        {
+          "pkgId": "msidbctly1l8uy",
+          "amount": 1.5
         }
       ]
     }
