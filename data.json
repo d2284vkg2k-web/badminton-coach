@@ -689,7 +689,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-06-30",
           "id": "ms9scvxf2xgwjh",
-          "usedLessons": 5.5,
+          "usedLessons": 4.5,
           "status": "active"
         }
       ],
@@ -5230,28 +5230,6 @@
       "deductions": [
         {
           "pkgId": "ms8m4nkcnhgsdh",
-          "amount": 1
-        }
-      ]
-    },
-    {
-      "studentId": "ms9scdwvde4ae7",
-      "studentName": "君君",
-      "date": "2026-09-01",
-      "startTime": "17:30",
-      "endTime": "18:30",
-      "duration": 1,
-      "type": "1对1",
-      "packageId": "ms9scvxf2xgwjh",
-      "amount": 283,
-      "location": "",
-      "courtCost": 60,
-      "notes": "",
-      "id": "mti3pyz38vvzzh",
-      "createdAt": 1788232939599,
-      "deductions": [
-        {
-          "pkgId": "ms9scvxf2xgwjh",
           "amount": 1
         }
       ]
