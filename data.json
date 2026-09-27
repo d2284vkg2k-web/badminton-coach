@@ -235,7 +235,7 @@
           "price": 6498,
           "purchaseDate": "2026-07-04",
           "id": "ms7ljj5cbg6e1u",
-          "usedLessons": 18,
+          "usedLessons": 19.5,
           "status": "active",
           "lessonDuration": 1
         }
@@ -262,6 +262,17 @@
           "usedLessons": 24,
           "status": "finished",
           "lessonDuration": 1
+        },
+        {
+          "name": "1对1",
+          "type": "1对2",
+          "totalLessons": 24,
+          "price": 5000,
+          "lessonDuration": 1.5,
+          "purchaseDate": "2026-09-27",
+          "id": "muj9t7ui6pn71w",
+          "usedLessons": 2,
+          "status": "active"
         }
       ],
       "trainingPlans": [],
@@ -578,7 +589,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-03-21",
           "id": "ms9rzjm6mqb8vp",
-          "usedLessons": 30,
+          "usedLessons": 32,
           "status": "active"
         }
       ],
@@ -770,6 +781,31 @@
       ],
       "trainingPlans": [],
       "createdAt": 1788614192523
+    },
+    {
+      "name": "鲜鲜",
+      "gender": "女",
+      "birthDate": "",
+      "joinDate": "2026-09-26",
+      "level": "初级",
+      "phone": "",
+      "notes": "",
+      "id": "muj9ro7kqseqna",
+      "packages": [
+        {
+          "name": "1对1",
+          "type": "1对1",
+          "totalLessons": 12,
+          "price": 3399,
+          "lessonDuration": 1,
+          "purchaseDate": "2026-09-27",
+          "id": "muj9ry31g5e9i5",
+          "usedLessons": 2,
+          "status": "active"
+        }
+      ],
+      "trainingPlans": [],
+      "createdAt": 1790480345168
     }
   ],
   "lessons": [
@@ -5739,6 +5775,138 @@
       "deductions": [
         {
           "pkgId": "ms7lh05kfvlkky",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms7lj4svlf8uyx",
+      "studentName": "灿灿",
+      "date": "2026-09-26",
+      "startTime": "14:30",
+      "endTime": "16:00",
+      "duration": 1.5,
+      "type": "1对1",
+      "packageId": "ms7ljj5cbg6e1u",
+      "amount": 260,
+      "location": "",
+      "courtCost": 90,
+      "notes": "",
+      "id": "muhvhuyh0o7tla",
+      "createdAt": 1790395906553,
+      "deductions": [
+        {
+          "pkgId": "ms7ljj5cbg6e1u",
+          "amount": 1.5
+        }
+      ]
+    },
+    {
+      "studentId": "ms94v3ryznd1dr",
+      "studentName": "盐",
+      "date": "2026-09-27",
+      "startTime": "14:00",
+      "endTime": "16:00",
+      "duration": 2,
+      "type": "1对1",
+      "packageId": "ms9rzjm6mqb8vp",
+      "amount": 540,
+      "location": "",
+      "courtCost": 90,
+      "notes": "",
+      "id": "muhwpho6d9uvdc",
+      "createdAt": 1790397942198,
+      "deductions": [
+        {
+          "pkgId": "ms9rzjm6mqb8vp",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "studentId": "muj9ro7kqseqna",
+      "studentName": "鲜鲜",
+      "date": "2026-09-26",
+      "startTime": "16:30",
+      "endTime": "17:30",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "muj9ry31g5e9i5",
+      "amount": 283,
+      "location": "",
+      "courtCost": 60,
+      "notes": "",
+      "id": "muj9sdlg20rszs",
+      "createdAt": 1790480378068,
+      "deductions": [
+        {
+          "pkgId": "muj9ry31g5e9i5",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "muj9ro7kqseqna",
+      "studentName": "鲜鲜",
+      "date": "2026-09-27",
+      "startTime": "16:00",
+      "endTime": "17:00",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "muj9ry31g5e9i5",
+      "amount": 283,
+      "location": "",
+      "courtCost": 60,
+      "notes": "",
+      "id": "muj9snp65l9j74",
+      "createdAt": 1790480391162,
+      "deductions": [
+        {
+          "pkgId": "muj9ry31g5e9i5",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms7llz3u1fmgo4",
+      "studentName": "思齐+承宇",
+      "date": "2026-09-27",
+      "startTime": "19:00",
+      "endTime": "20:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "muj9t7ui6pn71w",
+      "amount": 208,
+      "location": "",
+      "courtCost": 45,
+      "notes": "",
+      "id": "muj9u4uc0uzyiq",
+      "createdAt": 1790480460036,
+      "deductions": [
+        {
+          "pkgId": "muj9t7ui6pn71w",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms7llz3u1fmgo4",
+      "studentName": "思齐+承宇",
+      "date": "2026-09-27",
+      "startTime": "19:00",
+      "endTime": "20:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "muj9t7ui6pn71w",
+      "amount": 208,
+      "location": "",
+      "courtCost": 45,
+      "notes": "",
+      "id": "muj9uj4dhu58ee",
+      "createdAt": 1790480478541,
+      "deductions": [
+        {
+          "pkgId": "muj9t7ui6pn71w",
           "amount": 1
         }
       ]
