@@ -800,12 +800,37 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-09-27",
           "id": "muj9ry31g5e9i5",
-          "usedLessons": 2,
+          "usedLessons": 3,
           "status": "active"
         }
       ],
       "trainingPlans": [],
       "createdAt": 1790480345168
+    },
+    {
+      "name": "马赛玉",
+      "gender": "女",
+      "birthDate": "",
+      "joinDate": "2026-09-29",
+      "level": "初级",
+      "phone": "",
+      "notes": "",
+      "id": "muo8fb3uqwlxyk",
+      "packages": [
+        {
+          "name": "1对1",
+          "type": "1对1",
+          "totalLessons": 12,
+          "price": 3399,
+          "lessonDuration": 1,
+          "purchaseDate": "2026-09-29",
+          "id": "muo8fkw71dj1dh",
+          "usedLessons": 2,
+          "status": "active"
+        }
+      ],
+      "trainingPlans": [],
+      "createdAt": 1790780419578
     }
   ],
   "lessons": [
@@ -5907,6 +5932,72 @@
       "deductions": [
         {
           "pkgId": "muj9t7ui6pn71w",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "muj9ro7kqseqna",
+      "studentName": "鲜鲜",
+      "date": "2026-09-30",
+      "startTime": "20:00",
+      "endTime": "21:00",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "muj9ry31g5e9i5",
+      "amount": 283,
+      "location": "",
+      "courtCost": 60,
+      "notes": "",
+      "id": "muo8epmtmn2pu1",
+      "createdAt": 1790780391749,
+      "deductions": [
+        {
+          "pkgId": "muj9ry31g5e9i5",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "muo8fb3uqwlxyk",
+      "studentName": "马赛玉",
+      "date": "2026-09-29",
+      "startTime": "19:00",
+      "endTime": "20:00",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "muo8fkw71dj1dh",
+      "amount": 283,
+      "location": "",
+      "courtCost": 60,
+      "notes": "",
+      "id": "muo8fyqnmavlbd",
+      "createdAt": 1790780450207,
+      "deductions": [
+        {
+          "pkgId": "muo8fkw71dj1dh",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "muo8fb3uqwlxyk",
+      "studentName": "马赛玉",
+      "date": "2026-09-30",
+      "startTime": "19:00",
+      "endTime": "20:00",
+      "duration": 1,
+      "type": "1对1",
+      "packageId": "muo8fkw71dj1dh",
+      "amount": 283,
+      "location": "",
+      "courtCost": 60,
+      "notes": "",
+      "id": "muo8g7rup0odoo",
+      "createdAt": 1790780461914,
+      "deductions": [
+        {
+          "pkgId": "muo8fkw71dj1dh",
           "amount": 1
         }
       ]
