@@ -271,7 +271,7 @@
           "lessonDuration": 1.5,
           "purchaseDate": "2026-09-27",
           "id": "muj9t7ui6pn71w",
-          "usedLessons": 2,
+          "usedLessons": 4,
           "status": "active"
         }
       ],
@@ -589,7 +589,7 @@
           "lessonDuration": 1,
           "purchaseDate": "2026-03-21",
           "id": "ms9rzjm6mqb8vp",
-          "usedLessons": 34,
+          "usedLessons": 32,
           "status": "active"
         }
       ],
@@ -6408,28 +6408,6 @@
       ]
     },
     {
-      "studentId": "ms94v3ryznd1dr",
-      "studentName": "盐",
-      "date": "2026-10-18",
-      "startTime": "14:00",
-      "endTime": "16:00",
-      "duration": 2,
-      "type": "1对1",
-      "packageId": "ms9rzjm6mqb8vp",
-      "amount": 540,
-      "location": "",
-      "courtCost": 120,
-      "notes": "",
-      "id": "mv3dr7elaw1x59",
-      "createdAt": 1791696365373,
-      "deductions": [
-        {
-          "pkgId": "ms9rzjm6mqb8vp",
-          "amount": 2
-        }
-      ]
-    },
-    {
       "studentId": "muo8fb3uqwlxyk",
       "studentName": "马赛玉",
       "date": "2026-10-15",
@@ -6755,6 +6733,50 @@
       "deductions": [
         {
           "pkgId": "muj9ry31g5e9i5",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms7llz3u1fmgo4",
+      "studentName": "思齐+承宇",
+      "date": "2026-10-18",
+      "startTime": "19:00",
+      "endTime": "20:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "muj9t7ui6pn71w",
+      "amount": 208,
+      "location": "",
+      "courtCost": 30,
+      "notes": "",
+      "id": "mvc4fyr9g5lmsu",
+      "createdAt": 1792224919989,
+      "deductions": [
+        {
+          "pkgId": "muj9t7ui6pn71w",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "studentId": "ms7llz3u1fmgo4",
+      "studentName": "思齐+承宇",
+      "date": "2026-10-18",
+      "startTime": "19:00",
+      "endTime": "20:30",
+      "duration": 1.5,
+      "type": "1对2",
+      "packageId": "muj9t7ui6pn71w",
+      "amount": 208,
+      "location": "",
+      "courtCost": 30,
+      "notes": "",
+      "id": "mvc4gls5qkf1fv",
+      "createdAt": 1792224949829,
+      "deductions": [
+        {
+          "pkgId": "muj9t7ui6pn71w",
           "amount": 1
         }
       ]
